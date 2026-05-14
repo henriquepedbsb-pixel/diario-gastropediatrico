@@ -50,13 +50,13 @@ export default function CurriculoPage() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
 
       {/* Cabeçalho */}
-      <div className="card p-6 flex items-start gap-5">
+      <div className="card p-6 flex items-center gap-6">
         {/* Foto perfil */}
         <div className="shrink-0">
           <img
             src="/medico.jpg"
             alt="Dr. Henrique Gomes"
-            className="w-24 h-24 rounded-2xl object-cover object-top shadow-sm border border-slate-100"
+            className="w-36 h-44 rounded-2xl object-cover object-top shadow-md border border-slate-100"
           />
         </div>
         {/* Texto */}
