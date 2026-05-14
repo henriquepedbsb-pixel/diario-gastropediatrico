@@ -51,21 +51,24 @@ export function AuthProvider({ children }) {
 
         // 2ª tentativa: médico cadastrou o e-mail mas responsável ainda não tinha conta
         if (!pac && userEmail) {
-          const { data: pendente } = await supabase
-            .from('patients')
-            .select('*')
-            .eq('parent_email', userEmail.toLowerCase())
-            .is('parent_id', null)
-            .maybeSingle()
-
-          if (pendente) {
-            // Auto-vincula: salva parent_id e limpa parent_email
-            await supabase
+          try {
+            const { data: pendente } = await supabase
               .from('patients')
-              .update({ parent_id: userId, parent_email: null })
-              .eq('id', pendente.id)
-            pac = { ...pendente, parent_id: userId, parent_email: null }
-            console.log('[Auth] auto-vínculo por e-mail para paciente', pendente.id)
+              .select('*')
+              .eq('parent_email', userEmail.toLowerCase())
+              .is('parent_id', null)
+              .maybeSingle()
+
+            if (pendente) {
+              await supabase
+                .from('patients')
+                .update({ parent_id: userId, parent_email: null })
+                .eq('id', pendente.id)
+              pac = { ...pendente, parent_id: userId, parent_email: null }
+              console.log('[Auth] auto-vínculo por e-mail para paciente', pendente.id)
+            }
+          } catch (linkErr) {
+            console.warn('[Auth] verificação de parent_email falhou:', linkErr.message)
           }
         }
 
@@ -150,27 +153,33 @@ export function AuthProvider({ children }) {
         .insert({ id: uid, role: 'pai', full_name })
       if (pe) throw pe
 
-      // Verifica se médico já cadastrou paciente com este e-mail (vínculo pendente)
+      // Verifica vínculo pendente — isolado para não bloquear o cadastro se falhar
       let pac = null
-      const { data: pendente } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('parent_email', email.toLowerCase())
-        .is('parent_id', null)
-        .maybeSingle()
-
-      if (pendente) {
-        await supabase
+      try {
+        const { data: pendente } = await supabase
           .from('patients')
-          .update({ parent_id: uid, parent_email: null })
-          .eq('id', pendente.id)
-        pac = { ...pendente, parent_id: uid, parent_email: null }
-        console.log('[Auth] vínculo automático no cadastro para paciente', pendente.id)
+          .select('*')
+          .eq('parent_email', email.toLowerCase())
+          .is('parent_id', null)
+          .maybeSingle()
+
+        if (pendente) {
+          await supabase
+            .from('patients')
+            .update({ parent_id: uid, parent_email: null })
+            .eq('id', pendente.id)
+          pac = { ...pendente, parent_id: uid, parent_email: null }
+          console.log('[Auth] vínculo automático no cadastro, paciente:', pendente.id)
+        }
+      } catch (linkErr) {
+        console.warn('[Auth] verificação de vínculo pendente falhou:', linkErr.message)
       }
 
+      // Atualiza todo o estado de uma vez e libera o loading
       setSession(data.session)
       setProfile({ id: uid, role: 'pai', full_name })
       setPaciente(pac)
+      setLoading(false)   // ← garante que loading nunca fica travado após signup
       return data
     } finally {
       duranteSignup.current = false

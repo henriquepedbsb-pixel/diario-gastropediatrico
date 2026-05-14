@@ -38,7 +38,12 @@ export default function RegisterPage() {
           full_name: values.nome,
         })
       }
-      setSucesso(true)
+      if (tipoSel === 'pai') {
+        // Responsável: vai direto para o diário (já autenticado)
+        navigate('/diario', { replace: true })
+      } else {
+        setSucesso(true)
+      }
     } catch (err) {
       setErro(err.message ?? 'Erro ao criar conta. Tente novamente.')
     } finally {
