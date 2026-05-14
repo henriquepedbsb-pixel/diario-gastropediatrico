@@ -78,22 +78,23 @@ export default function NovoPacientePage() {
     setLoading(true)
     setErro('')
     try {
-      // ── Monta o campo notes como JSON com pais + observações ──
-      const notesObj = {}
-      if (values.father_name?.trim()) notesObj.pai  = values.father_name.trim()
-      if (values.mother_name?.trim()) notesObj.mae  = values.mother_name.trim()
-      if (values.notes?.trim())       notesObj.notas = values.notes.trim()
-      const notesJson = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
-
       // ── Tenta resolver o UUID do responsável pelo e-mail ──
       const emailResp = values.parent_email?.trim().toLowerCase() || null
       let parentId    = null
 
       if (emailResp) {
         const { data: uid } = await supabase
-          .rpc('get_user_id_by_email', { p_email: emailResp })
+          .rpc('get_user_id_by_email', { email_input: emailResp })
         parentId = uid ?? null
       }
+
+      // ── Monta notes: dados dos pais + pending_parent_email se necessário ──
+      const notesObj = {}
+      if (values.father_name?.trim()) notesObj.pai  = values.father_name.trim()
+      if (values.mother_name?.trim()) notesObj.mae  = values.mother_name.trim()
+      if (values.notes?.trim())       notesObj.notas = values.notes.trim()
+      if (emailResp && !parentId)     notesObj.pending_parent_email = emailResp
+      const notesJson = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
 
       // ── Insere o paciente ──
       const { data: patient, error: patientError } = await supabase
@@ -105,8 +106,8 @@ export default function NovoPacientePage() {
           blood_type:   values.blood_type || null,
           allergies:    allergies.length  ? allergies : null,
           notes:        notesJson,
-          parent_id:    parentId,                        // UUID se já tem conta, null se não
-          parent_email: parentId ? null : emailResp,     // salva e-mail para vínculo posterior
+          parent_id:    parentId,          // UUID do responsável se já tem conta, null se não
+          parent_email: parentId ? null : emailResp,  // coluna dedicada para busca eficiente
         })
         .select()
         .single()

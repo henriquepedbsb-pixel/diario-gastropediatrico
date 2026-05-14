@@ -61,11 +61,19 @@ export function AuthProvider({ children }) {
               .maybeSingle()
 
             if (pendente) {
+              // Limpa pending_parent_email do notes ao vincular
+              let updatedNotes = null
+              try {
+                const notesObj = pendente.notes ? JSON.parse(pendente.notes) : {}
+                delete notesObj.pending_parent_email
+                updatedNotes = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
+              } catch { updatedNotes = null }
+
               await supabase
                 .from('patients')
-                .update({ parent_id: userId, parent_email: null })
+                .update({ parent_id: userId, parent_email: null, notes: updatedNotes })
                 .eq('id', pendente.id)
-              pac = { ...pendente, parent_id: userId, parent_email: null }
+              pac = { ...pendente, parent_id: userId, parent_email: null, notes: updatedNotes }
               console.log('[Auth] auto-vínculo por e-mail para paciente', pendente.id)
             }
           } catch (linkErr) {
@@ -175,11 +183,19 @@ export function AuthProvider({ children }) {
           .maybeSingle()
 
         if (pendente) {
+          // Limpa pending_parent_email do notes ao vincular
+          let updatedNotes = null
+          try {
+            const notesObj = pendente.notes ? JSON.parse(pendente.notes) : {}
+            delete notesObj.pending_parent_email
+            updatedNotes = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
+          } catch { updatedNotes = null }
+
           await supabase
             .from('patients')
-            .update({ parent_id: uid, parent_email: null })
+            .update({ parent_id: uid, parent_email: null, notes: updatedNotes })
             .eq('id', pendente.id)
-          pac = { ...pendente, parent_id: uid, parent_email: null }
+          pac = { ...pendente, parent_id: uid, parent_email: null, notes: updatedNotes }
           console.log('[Auth] vínculo automático no cadastro, paciente:', pendente.id)
         }
       } catch (linkErr) {
