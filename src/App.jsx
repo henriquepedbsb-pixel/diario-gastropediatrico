@@ -10,6 +10,7 @@ import NovoPacientePage from './pages/NovoPacientePage'
 import PacienteDetailPage from './pages/PacienteDetailPage'
 import DiarioPage from './pages/DiarioPage'
 import DicasPage from './pages/DicasPage'
+import CurriculoPage from './pages/CurriculoPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
@@ -78,6 +79,10 @@ export default function App() {
             <Route path="/dashboard/pacientes/:id"      element={<PacienteDetailPage />} />
             <Route path="/dashboard/dicas"             element={<DicasPage />} />
           </Route>
+
+          {/* Médico */}
+          {/* Currículo — visível para todos os autenticados */}
+          <Route path="/curriculo" element={<CurriculoPage />} />
 
           {/* Pai / Responsável */}
           <Route element={<SomentePai />}>
