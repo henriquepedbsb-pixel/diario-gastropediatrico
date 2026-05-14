@@ -31,10 +31,7 @@ function calcIdade(birthdate) {
   return `${years} ${years === 1 ? 'ano' : 'anos'}`
 }
 
-function idadeEmMeses(birthdate) {
-  if (!birthdate) return 0
-  return differenceInMonths(new Date(), parseISO(birthdate))
-}
+
 
 /* ─── modal ─── */
 function Modal({ title, onClose, children }) {
@@ -266,7 +263,7 @@ function TabDiario({ patient }) {
 /* ═══════════════════════════════════════════
    ABA 2 — GRÁFICOS DE CRESCIMENTO
 ═══════════════════════════════════════════ */
-function GrowthChart({ title, unit, whoData, patientData, dataKey }) {
+function GrowthChart({ title, unit, whoData, patientData, dataKey, maxAge }) {
   // Mapa rápido: mês → dados OMS
   const whoMap = {}
   whoData.forEach(w => { whoMap[w.mes] = w })
@@ -276,8 +273,11 @@ function GrowthChart({ title, unit, whoData, patientData, dataKey }) {
   patientData.forEach(m => { if (m[dataKey] != null) medMap[m.age_months] = m[dataKey] })
 
   // União de todos os meses (OMS + paciente) → garante que todo registro aparece
+  // Limita os dados OMS ao maxAge se fornecido (ex.: PC só até 60 meses)
+  const whoFiltrado = maxAge ? whoData.filter(w => w.mes <= maxAge) : whoData
+
   const todosMeses = new Set([
-    ...whoData.map(w => w.mes),
+    ...whoFiltrado.map(w => w.mes),
     ...Object.keys(medMap).map(Number),
   ])
 
@@ -291,17 +291,38 @@ function GrowthChart({ title, unit, whoData, patientData, dataKey }) {
       paciente: medMap[mes]       ?? null,
     }))
 
+  // Formata o eixo X: meses para < 24m, anos para ≥ 24m
+  const maxMes = chartData.length > 0 ? chartData[chartData.length - 1].mes : 0
+  const tickFormatter = (mes) => {
+    if (maxMes <= 30) return `${mes}m`           // eixo todo em meses
+    if (mes === 0) return '0'
+    if (mes < 24) return `${mes}m`
+    const anos = mes / 12
+    return Number.isInteger(anos) ? `${anos}a` : ''
+  }
+
+  const tooltipFormatter = (v, n) => {
+    if (v == null) return ['—', n]
+    const label = n === 'paciente' ? 'Paciente' : n
+    return [`${v} ${unit}`, label]
+  }
+  const tooltipLabelFormatter = (mes) => {
+    if (mes < 24) return `${mes} meses`
+    const anos = Math.floor(mes / 12)
+    const mResto = mes % 12
+    return mResto > 0 ? `${anos}a ${mResto}m` : `${anos} anos`
+  }
+
   return (
     <div className="card p-4">
       <h3 className="font-semibold text-slate-700 mb-3 text-sm">{title}</h3>
       <ResponsiveContainer width="100%" height={220}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 16, left: 0 }}>
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 20, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="mes" tick={{ fontSize: 11 }}
-            label={{ value: 'meses', position: 'insideBottom', offset: -8, fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} unit={unit} width={42} />
-          <Tooltip formatter={(v, n) => [v != null ? `${v} ${unit}` : '—',
-            n === 'paciente' ? 'Paciente' : n]} />
+          <XAxis dataKey="mes" tick={{ fontSize: 10 }} tickFormatter={tickFormatter}
+            label={{ value: 'idade', position: 'insideBottom', offset: -8, fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} unit={unit} width={46} />
+          <Tooltip formatter={tooltipFormatter} labelFormatter={tooltipLabelFormatter} />
           <Line dataKey="p97" stroke="#e2e8f0" strokeWidth={1} dot={false} strokeDasharray="4 2" name="P97" connectNulls />
           <Line dataKey="p50" stroke="#94a3b8" strokeWidth={1.5} dot={false} name="P50" connectNulls />
           <Line dataKey="p3"  stroke="#e2e8f0" strokeWidth={1} dot={false} strokeDasharray="4 2" name="P3" connectNulls />
@@ -381,8 +402,7 @@ function TabGraficos({ patient }) {
     recorded_at: '', weight_kg: '', height_cm: '', head_circumference_cm: '',
   })
 
-  const isMenino  = patient.gender === 'M'
-  const ageMonths = idadeEmMeses(patient.birthdate)
+  const isMenino = patient.gender === 'M'
 
   /* ── Refetch: skeleton só no 1º load, silencioso nos demais ── */
   useEffect(() => {
@@ -462,12 +482,6 @@ function TabGraficos({ patient }) {
         </button>
       </div>
 
-      {ageMonths > 24 && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-lg">
-          ⚠️ Curvas OMS disponíveis para 0–24 meses. Paciente com {calcIdade(patient.birthdate)}.
-        </div>
-      )}
-
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => <div key={i} className="card h-64 animate-pulse bg-slate-100" />)}
@@ -485,19 +499,20 @@ function TabGraficos({ patient }) {
           {/* Coluna dos gráficos */}
           <div className="space-y-4">
             <GrowthChart
-              title={`Peso — ${isMenino ? 'Meninos' : 'Meninas'}`} unit="kg"
+              title={`Peso — ${isMenino ? 'Meninos' : 'Meninas'} (OMS até 10 anos)`} unit="kg"
               whoData={isMenino ? WHO_PESO_MENINOS : WHO_PESO_MENINAS}
               patientData={medidas} dataKey="weight_kg"
             />
             <GrowthChart
-              title={`Estatura — ${isMenino ? 'Meninos' : 'Meninas'}`} unit="cm"
+              title={`Estatura — ${isMenino ? 'Meninos' : 'Meninas'} (OMS até 18 anos)`} unit="cm"
               whoData={isMenino ? WHO_ALTURA_MENINOS : WHO_ALTURA_MENINAS}
               patientData={medidas} dataKey="height_cm"
             />
             <GrowthChart
-              title={`Perímetro Cefálico — ${isMenino ? 'Meninos' : 'Meninas'}`} unit="cm"
+              title={`Perímetro Cefálico — ${isMenino ? 'Meninos' : 'Meninas'} (OMS até 5 anos)`} unit="cm"
               whoData={isMenino ? WHO_PC_MENINOS : WHO_PC_MENINAS}
               patientData={medidas} dataKey="head_circumference_cm"
+              maxAge={60}
             />
           </div>
 
