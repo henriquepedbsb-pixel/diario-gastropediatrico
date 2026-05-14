@@ -162,7 +162,7 @@ export default function HomePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="page-title">
-            Bom dia{profile?.full_name ? `, Dr. ${profile.full_name.split(' ')[0]}` : ''} 👋
+            Bom dia{profile?.full_name ? `, ${profile.full_name.startsWith('Dr') ? profile.full_name.split(' ').slice(0, 2).join(' ') : `Dr. ${profile.full_name.split(' ')[0]}`}` : ''} 👋
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
