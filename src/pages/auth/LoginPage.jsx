@@ -39,19 +39,19 @@ export default function LoginPage() {
           {/* Topo colorido */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-8 text-white text-center">
             {/* Foto do médico */}
-            <div className="relative w-24 h-24 mx-auto mb-4">
+            <div className="relative w-36 h-36 mx-auto mb-4">
               <img
                 src="/medico.jpg"
                 alt="Dr. Henrique Gomes"
-                className="w-24 h-24 rounded-full object-cover object-top border-4 border-white/40 shadow-lg"
+                className="w-36 h-36 rounded-full object-cover object-top border-4 border-white/40 shadow-lg"
                 onError={e => {
                   e.target.style.display = 'none'
                   e.target.nextSibling.style.display = 'flex'
                 }}
               />
               {/* Fallback: ícone caso a foto não carregue */}
-              <div className="w-24 h-24 bg-white/20 rounded-full items-center justify-center hidden absolute inset-0">
-                <Stethoscope size={36} />
+              <div className="w-36 h-36 bg-white/20 rounded-full items-center justify-center hidden absolute inset-0">
+                <Stethoscope size={48} />
               </div>
             </div>
             <h1 className="text-xl font-bold tracking-tight">Dr. Henrique Gomes</h1>
