@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
          ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
@@ -1700,11 +1700,14 @@ export default function PacienteDetailPage() {
   const navigate     = useNavigate()
   const [patient,    setPatient]   = useState(null)
   const [loading,    setLoading]   = useState(true)
-  const [activeTab,     setActiveTab]    = useState('cadastro')
-  const [sidePanel,     setSidePanel]    = useState('dicas')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') || 'cadastro'
+  const setActiveTab = (tab) => setSearchParams({ tab }, { replace: true })
+
+  const [sidePanel,      setSidePanel]      = useState('dicas')
   const [mobileInfoOpen, setMobileInfoOpen] = useState(false)
-  const [confirmDel,    setConfirmDel]   = useState(false)
-  const [deletando,     setDeletando]    = useState(false)
+  const [confirmDel,     setConfirmDel]     = useState(false)
+  const [deletando,      setDeletando]      = useState(false)
 
   const handleDeletePaciente = async () => {
     setDeletando(true)
@@ -1821,30 +1824,33 @@ export default function PacienteDetailPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mt-4 max-w-4xl mx-auto overflow-x-auto pb-1">
-          {TABS.map(tab => {
-            const Icon     = tab.icon
-            const isActive = activeTab === tab.id
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
-                  ${isActive
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                    : 'text-slate-500 hover:bg-slate-100'}`}>
-                <Icon size={15} />
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
       </div>
 
       {/* Corpo: conteúdo principal + sidebar informativa */}
       <div className="flex-1 overflow-hidden flex">
 
         {/* ── Conteúdo principal ── */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto">
+
+          {/* Strip de abas — visível apenas em mobile (desktop usa a sidebar) */}
+          <div className="lg:hidden flex gap-1 overflow-x-auto px-4 py-2 bg-white border-b border-slate-100 sticky top-0 z-10">
+            {TABS.map(tab => {
+              const Icon     = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0
+                    ${isActive
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'text-slate-500 hover:bg-slate-100'}`}>
+                  <Icon size={13} />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="p-6">
           <div className="max-w-3xl mx-auto space-y-0">
             {activeTab === 'cadastro'  && <TabCadastro  patient={patient} onUpdate={loadPatient} />}
             {activeTab === 'diario'    && <TabDiario    patient={patient} />}
@@ -1890,6 +1896,7 @@ export default function PacienteDetailPage() {
               )}
             </div>
           </div>
+          </div>{/* /p-6 */}
         </div>
 
         {/* ── Sidebar informativa (desktop) ── */}

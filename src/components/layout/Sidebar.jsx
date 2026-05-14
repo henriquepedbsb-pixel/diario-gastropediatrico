@@ -1,12 +1,45 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb } from 'lucide-react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb,
+         ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
 
+const DOCTOR_TABS = [
+  { id: 'cadastro',  label: 'Cadastro',         icon: ClipboardList   },
+  { id: 'diario',   label: 'Diário Alimentar', icon: UtensilsCrossed },
+  { id: 'fezes',    label: 'Fezes',             icon: Droplets        },
+  { id: 'graficos', label: 'Gráficos',          icon: TrendingUp      },
+  { id: 'receitas', label: 'Receitas',          icon: FileText        },
+]
+
+const PARENT_TABS = [
+  { id: 'cadastro',  label: 'Cadastro',  icon: ClipboardList   },
+  { id: 'refeicoes', label: 'Refeições', icon: UtensilsCrossed },
+  { id: 'fezes',     label: 'Fezes',     icon: Droplets        },
+  { id: 'receitas',  label: 'Receitas',  icon: FileText        },
+]
+
 export default function Sidebar({ onClose }) {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
   const { profile, signOut } = useAuth()
-  const isMedico = isDoctor(profile?.role)
+  const isMedico  = isDoctor(profile?.role)
+
+  // Detecta contexto para exibir seções contextuais
+  const patientMatch = location.pathname.match(/^\/dashboard\/pacientes\/([^/]+)$/)
+  const patientId    = patientMatch?.[1] ?? null
+  const isDiario     = location.pathname === '/diario'
+
+  // Aba ativa vem do query param ?tab=...
+  const activeTab = new URLSearchParams(location.search).get('tab') || 'cadastro'
+
+  const goTab = (tabId) => {
+    if (patientId) navigate(`/dashboard/pacientes/${patientId}?tab=${tabId}`)
+    else if (isDiario) navigate(`/diario?tab=${tabId}`)
+    onClose?.()
+  }
+
+  const contextTabs = patientId ? DOCTOR_TABS : isDiario ? PARENT_TABS : null
 
   const handleLogout = async () => {
     await signOut()
@@ -75,6 +108,30 @@ export default function Sidebar({ onClose }) {
             }>
             <Home size={18} /> Diário do Meu Filho
           </NavLink>
+        )}
+
+        {/* ── Seções contextuais (aparecem dentro de um paciente ou no diário) ── */}
+        {contextTabs && (
+          <>
+            <div className="pt-3 pb-1">
+              <div className="h-px bg-slate-100 mb-3" />
+              <p className="section-header px-2">Seções</p>
+            </div>
+            {contextTabs.map(tab => {
+              const Icon     = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button key={tab.id} onClick={() => goTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}>
+                  <Icon size={18} /> {tab.label}
+                </button>
+              )
+            })}
+          </>
         )}
       </nav>
 

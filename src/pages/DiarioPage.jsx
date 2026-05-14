@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -1404,8 +1405,11 @@ const SIDEBAR_TABS = [
 
 export default function DiarioPage() {
   const { paciente, profile, refreshPaciente } = useAuth()
-  const [tab,           setTab]           = useState('cadastro')
-  const [sidePanel,     setSidePanel]     = useState('dicas')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab    = searchParams.get('tab') || 'cadastro'
+  const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
+
+  const [sidePanel,      setSidePanel]      = useState('dicas')
   const [mobileInfoOpen, setMobileInfoOpen] = useState(false)
 
   /* Paciente não vinculado — formulário de solicitação */
@@ -1428,7 +1432,7 @@ export default function DiarioPage() {
       {/* Cabeçalho do paciente */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-2xl shrink-0 overflow-hidden ${!paciente.photo_url ? avatarColor : ''}`}>
               {paciente.photo_url ? (
                 <img src={paciente.photo_url} alt={paciente.name} className="w-full h-full object-cover" />
@@ -1447,23 +1451,6 @@ export default function DiarioPage() {
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 overflow-x-auto">
-            {TABS.map(t => {
-              const Icon     = t.icon
-              const isActive = tab === t.id
-              return (
-                <button key={t.id} onClick={() => setTab(t.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
-                    ${isActive
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'text-slate-500 hover:bg-slate-100'}`}>
-                  <Icon size={15} />
-                  {t.label}
-                </button>
-              )
-            })}
-          </div>
         </div>
       </div>
 
@@ -1471,7 +1458,27 @@ export default function DiarioPage() {
       <div className="flex-1 overflow-hidden flex">
 
         {/* ── Conteúdo principal ── */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto">
+
+          {/* Strip de abas — apenas mobile (desktop usa a sidebar) */}
+          <div className="lg:hidden flex gap-1 overflow-x-auto px-4 py-2 bg-white border-b border-slate-100 sticky top-0 z-10">
+            {TABS.map(t => {
+              const Icon     = t.icon
+              const isActive = tab === t.id
+              return (
+                <button key={t.id} onClick={() => setTab(t.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0
+                    ${isActive
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'text-slate-500 hover:bg-slate-100'}`}>
+                  <Icon size={13} />
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="p-6">
           <div className="max-w-2xl mx-auto">
             {tab === 'cadastro'  && <TabCadastroPai patient={paciente} onUpdate={refreshPaciente} />}
             {tab === 'refeicoes' && <TabRefeicoes  patient={paciente} />}
@@ -1515,6 +1522,7 @@ export default function DiarioPage() {
               )}
             </div>
           </div>
+          </div>{/* /p-6 */}
         </div>
 
         {/* ── Sidebar informativa (desktop) ── */}
