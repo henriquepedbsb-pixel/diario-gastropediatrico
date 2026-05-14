@@ -228,6 +228,17 @@ export function AuthProvider({ children }) {
     }
   }
 
+  /* ─── atualiza dados do paciente vinculado (chamado após edição pelo responsável) ─── */
+  const refreshPaciente = async () => {
+    if (!paciente?.id) return
+    const { data } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('id', paciente.id)
+      .single()
+    if (data) setPaciente(data)
+  }
+
   /* ─── logout ─── */
   const signOut = async () => {
     await supabase.auth.signOut()
@@ -236,7 +247,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       session, profile, paciente, loading,
-      signIn, signOut, signUpMedico, signUpPai,
+      signIn, signOut, signUpMedico, signUpPai, refreshPaciente,
     }}>
       {children}
     </AuthContext.Provider>

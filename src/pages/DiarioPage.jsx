@@ -5,6 +5,7 @@ import {
   UtensilsCrossed, FileText, Lightbulb, Droplets,
   Plus, Trash2, Loader2, Baby, X, Upload, Paperclip,
   Milestone, Syringe, Clock, Send, CheckCircle, XCircle,
+  ClipboardList, Pencil, Check,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -975,9 +976,271 @@ function SemPacienteScreen({ profile }) {
 }
 
 /* ═══════════════════════════════════════════
+   ABA — CADASTRO (responsável)
+═══════════════════════════════════════════ */
+const BLOOD_TYPES_LIST = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−']
+
+function TagInputCad({ tags, onChange }) {
+  const [input, setInput] = useState('')
+  const add = () => {
+    const val = input.trim()
+    if (val && !tags.includes(val)) onChange([...tags, val])
+    setInput('')
+  }
+  const remove = tag => onChange(tags.filter(t => t !== tag))
+  return (
+    <div
+      className="input flex flex-wrap gap-1.5 h-auto min-h-[42px] cursor-text py-2"
+      onClick={e => e.currentTarget.querySelector('input')?.focus()}
+    >
+      {tags.map(tag => (
+        <span key={tag} className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full">
+          {tag}
+          <button type="button" onClick={() => remove(tag)} className="hover:text-amber-600"><X size={11} /></button>
+        </span>
+      ))}
+      <input
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add() }
+          if (e.key === 'Backspace' && !input && tags.length) onChange(tags.slice(0, -1))
+        }}
+        onBlur={add}
+        placeholder={tags.length === 0 ? 'Digite e pressione Enter…' : ''}
+        className="flex-1 min-w-[120px] outline-none text-sm bg-transparent placeholder-slate-400"
+      />
+    </div>
+  )
+}
+
+function TabCadastroPai({ patient, onUpdate }) {
+  /* Parse notes JSON */
+  let nd = {}
+  if (patient.notes) { try { nd = JSON.parse(patient.notes) } catch { nd = { notas: patient.notes } } }
+
+  const allergiesInit = Array.isArray(patient.allergies)
+    ? patient.allergies
+    : patient.allergies ? patient.allergies.split(',').map(a => a.trim()) : []
+
+  const [editing,       setEditing]       = useState(false)
+  const [saving,        setSaving]        = useState(false)
+  const [erro,          setErro]          = useState('')
+  const [editAllergies, setEditAllergies] = useState(allergiesInit)
+  const [form, setForm] = useState({
+    blood_type:  patient.blood_type || '',
+    father_name: nd.pai   || '',
+    mother_name: nd.mae   || '',
+    notas:       nd.notas || '',
+  })
+
+  /* Sincroniza ao abrir edição */
+  const openEdit = () => {
+    let n = {}
+    if (patient.notes) { try { n = JSON.parse(patient.notes) } catch { n = { notas: patient.notes } } }
+    const al = Array.isArray(patient.allergies)
+      ? patient.allergies
+      : patient.allergies ? patient.allergies.split(',').map(a => a.trim()) : []
+    setForm({ blood_type: patient.blood_type || '', father_name: n.pai || '', mother_name: n.mae || '', notas: n.notas || '' })
+    setEditAllergies(al)
+    setErro('')
+    setEditing(true)
+  }
+
+  const save = async () => {
+    setSaving(true); setErro('')
+    try {
+      /* Preserva campos existentes (ex: pending_parent_email removido) */
+      let base = {}
+      if (patient.notes) { try { base = JSON.parse(patient.notes) } catch { base = {} } }
+      delete base.pending_parent_email
+      if (form.father_name.trim()) base.pai   = form.father_name.trim(); else delete base.pai
+      if (form.mother_name.trim()) base.mae   = form.mother_name.trim(); else delete base.mae
+      if (form.notas.trim())       base.notas = form.notas.trim();       else delete base.notas
+
+      const { error } = await supabase.from('patients').update({
+        blood_type: form.blood_type || null,
+        allergies:  editAllergies.length ? editAllergies : null,
+        notes:      Object.keys(base).length ? JSON.stringify(base) : null,
+      }).eq('id', patient.id)
+
+      if (error) throw error
+      setEditing(false)
+      onUpdate()   // re-fetcha o paciente no AuthContext
+    } catch (err) {
+      setErro(err.message ?? 'Erro ao salvar.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const Row = ({ label, value }) => (
+    <div className="flex gap-2 py-2 border-b border-slate-100 last:border-0">
+      <span className="w-36 shrink-0 text-xs text-slate-400 font-medium uppercase tracking-wide pt-0.5">{label}</span>
+      <span className="text-sm text-slate-700 flex-1">{value || <span className="text-slate-300 italic">—</span>}</span>
+    </div>
+  )
+
+  /* ── Modo exibição ── */
+  if (!editing) return (
+    <div className="space-y-4 max-w-2xl mx-auto">
+
+      {/* Dados fixos (somente leitura) */}
+      <div className="card p-5">
+        <h3 className="font-semibold text-slate-700 text-sm mb-3">Dados da Criança</h3>
+        <Row label="Nome" value={patient.name} />
+        <Row label="Data de nascimento"
+          value={patient.birthdate
+            ? format(new Date(patient.birthdate + 'T12:00:00'), 'dd/MM/yyyy')
+            : null} />
+        <Row label="Gênero"
+          value={patient.gender === 'M' ? 'Masculino' : patient.gender === 'F' ? 'Feminino' : null} />
+        <Row label="Tipo sanguíneo"
+          value={patient.blood_type
+            ? <span className="bg-red-50 text-red-700 font-semibold px-2 py-0.5 rounded text-xs">{patient.blood_type}</span>
+            : null} />
+      </div>
+
+      {/* Alergias */}
+      <div className="card p-5">
+        <h3 className="font-semibold text-slate-700 text-sm mb-3">Alergias e Intolerâncias</h3>
+        {allergiesInit.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {allergiesInit.map(a => (
+              <span key={a} className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-1 rounded-full">{a}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400 italic">Nenhuma alergia registrada</p>
+        )}
+      </div>
+
+      {/* Responsáveis e obs */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-slate-700 text-sm">Informações Complementares</h3>
+          <button onClick={openEdit}
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+            <Pencil size={13} /> Completar cadastro
+          </button>
+        </div>
+        <Row label="Pai / Responsável" value={nd.pai} />
+        <Row label="Mãe / Responsável" value={nd.mae} />
+        {nd.notas && <Row label="Observações" value={nd.notas} />}
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+        <p className="text-xs text-blue-700 leading-relaxed">
+          ℹ️ Nome, data de nascimento e gênero são definidos pelo médico.
+          Tipo sanguíneo, alergias e dados dos responsáveis podem ser completados por você.
+        </p>
+      </div>
+    </div>
+  )
+
+  /* ── Modo edição ── */
+  return (
+    <div className="space-y-4 max-w-2xl mx-auto">
+      <div className="card p-6 space-y-5">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h3 className="font-semibold text-slate-700">Completar Cadastro</h3>
+          <button onClick={() => setEditing(false)}
+            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Tipo sanguíneo */}
+        <div>
+          <label className="label">Tipo sanguíneo</label>
+          <div className="grid grid-cols-4 gap-2">
+            {BLOOD_TYPES_LIST.map(bt => (
+              <label key={bt} className="relative cursor-pointer">
+                <input type="radio" value={bt} className="sr-only peer"
+                  checked={form.blood_type === bt}
+                  onChange={() => setForm(f => ({ ...f, blood_type: bt }))} />
+                <div className="text-center py-1.5 rounded-lg border-2 border-slate-200 text-xs font-semibold text-slate-600
+                  peer-checked:border-red-400 peer-checked:bg-red-50 peer-checked:text-red-700
+                  hover:border-slate-300 transition-all">
+                  {bt}
+                </div>
+              </label>
+            ))}
+          </div>
+          {form.blood_type && (
+            <button type="button" onClick={() => setForm(f => ({ ...f, blood_type: '' }))}
+              className="mt-1.5 text-xs text-slate-400 hover:text-slate-600 underline">
+              Limpar seleção
+            </button>
+          )}
+        </div>
+
+        {/* Alergias */}
+        <div>
+          <label className="label">Alergias e intolerâncias</label>
+          <TagInputCad tags={editAllergies} onChange={setEditAllergies} />
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {['Leite de vaca', 'Glúten', 'Ovo', 'Soja', 'Amendoim', 'Frutos do mar'].map(a =>
+              !editAllergies.includes(a) && (
+                <button key={a} type="button"
+                  onClick={() => setEditAllergies(p => [...p, a])}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                  <Plus size={10} /> {a}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* Responsáveis */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Pai / Responsável</label>
+            <input className="input" placeholder="Nome completo"
+              value={form.father_name}
+              onChange={e => setForm(f => ({ ...f, father_name: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Mãe / Responsável</label>
+            <input className="input" placeholder="Nome completo"
+              value={form.mother_name}
+              onChange={e => setForm(f => ({ ...f, mother_name: e.target.value }))} />
+          </div>
+        </div>
+
+        {/* Observações */}
+        <div>
+          <label className="label">Observações sobre a criança</label>
+          <textarea className="input resize-none" rows={3}
+            placeholder="Informações relevantes sobre o seu filho…"
+            value={form.notas}
+            onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} />
+        </div>
+
+        {erro && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+            <span className="shrink-0">⚠️</span> {erro}
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={() => setEditing(false)} className="btn-secondary flex-1">Cancelar</button>
+          <button onClick={save} disabled={saving} className="btn-primary flex-1">
+            {saving
+              ? <><Loader2 size={15} className="animate-spin" /> Salvando…</>
+              : <><Check size={15} /> Salvar alterações</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
    PÁGINA PRINCIPAL
 ═══════════════════════════════════════════ */
 const TABS = [
+  { id: 'cadastro',  label: 'Cadastro',  icon: ClipboardList   },
   { id: 'refeicoes', label: 'Refeições', icon: UtensilsCrossed },
   { id: 'fezes',     label: 'Fezes',     icon: Droplets        },
   { id: 'receitas',  label: 'Receitas',  icon: FileText        },
@@ -987,8 +1250,8 @@ const TABS = [
 ]
 
 export default function DiarioPage() {
-  const { paciente, profile } = useAuth()
-  const [tab, setTab] = useState('refeicoes')
+  const { paciente, profile, refreshPaciente } = useAuth()
+  const [tab, setTab] = useState('cadastro')
 
   /* Paciente não vinculado — formulário de solicitação */
   if (!paciente) {
@@ -1046,12 +1309,13 @@ export default function DiarioPage() {
       {/* Conteúdo */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl mx-auto">
-          {tab === 'refeicoes' && <TabRefeicoes patient={paciente} />}
-          {tab === 'fezes'     && <TabFezes     patient={paciente} />}
-          {tab === 'receitas'  && <TabReceitas  patient={paciente} />}
+          {tab === 'cadastro'  && <TabCadastroPai patient={paciente} onUpdate={refreshPaciente} />}
+          {tab === 'refeicoes' && <TabRefeicoes  patient={paciente} />}
+          {tab === 'fezes'     && <TabFezes      patient={paciente} />}
+          {tab === 'receitas'  && <TabReceitas   patient={paciente} />}
           {tab === 'dicas'     && <TabDicas />}
-          {tab === 'marcos'    && <TabMarcos  birthdate={paciente.birthdate} />}
-          {tab === 'vacinas'   && <TabVacinas birthdate={paciente.birthdate} />}
+          {tab === 'marcos'    && <TabMarcos   birthdate={paciente.birthdate} />}
+          {tab === 'vacinas'   && <TabVacinas  birthdate={paciente.birthdate} />}
         </div>
       </div>
     </div>
