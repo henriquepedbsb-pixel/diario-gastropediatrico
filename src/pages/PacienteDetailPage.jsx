@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
          ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
-         Milestone, Syringe, Camera, ChevronDown, ChevronUp } from 'lucide-react'
+         Milestone, Syringe, Camera } from 'lucide-react'
 import TabMarcos  from '../components/paciente/TabMarcos'
 import TabVacinas from '../components/paciente/TabVacinas'
 import { useAuth } from '../contexts/AuthContext'
@@ -1687,12 +1687,9 @@ const TABS = [
   { id: 'fezes',    label: 'Fezes',             icon: Droplets        },
   { id: 'graficos', label: 'Gráficos',          icon: TrendingUp      },
   { id: 'receitas', label: 'Receitas',          icon: FileText        },
-]
-
-const SIDEBAR_TABS = [
-  { id: 'dicas',   label: 'Dicas',   icon: Lightbulb },
-  { id: 'marcos',  label: 'Marcos',  icon: Milestone },
-  { id: 'vacinas', label: 'Vacinas', icon: Syringe   },
+  { id: 'dicas',    label: 'Dicas',             icon: Lightbulb       },
+  { id: 'marcos',   label: 'Marcos',            icon: Milestone       },
+  { id: 'vacinas',  label: 'Vacinas',           icon: Syringe         },
 ]
 
 export default function PacienteDetailPage() {
@@ -1704,8 +1701,6 @@ export default function PacienteDetailPage() {
   const activeTab = searchParams.get('tab') || 'cadastro'
   const setActiveTab = (tab) => setSearchParams({ tab }, { replace: true })
 
-  const [sidePanel,      setSidePanel]      = useState('dicas')
-  const [mobileInfoOpen, setMobileInfoOpen] = useState(false)
   const [confirmDel,     setConfirmDel]     = useState(false)
   const [deletando,      setDeletando]      = useState(false)
 
@@ -1826,107 +1821,22 @@ export default function PacienteDetailPage() {
 
       </div>
 
-      {/* Corpo: conteúdo principal + sidebar informativa */}
-      <div className="flex-1 overflow-hidden flex">
-
-        {/* ── Conteúdo principal ── */}
-        <div className="flex-1 overflow-y-auto">
-
-          {/* Strip de abas — apenas mobile (sidebar fechada) */}
-          <div className="lg:hidden">
-            <div className="flex gap-1 overflow-x-auto px-4 py-2 bg-white border-b border-slate-100 sticky top-0 z-10">
-              {TABS.map(tab => {
-                const Icon     = tab.icon
-                const isActive = activeTab === tab.id
-                return (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0
-                      ${isActive
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'text-slate-500 hover:bg-slate-100'}`}>
-                    <Icon size={13} />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+      {/* Conteúdo principal — largura total */}
+      <div className="flex-1 overflow-y-auto">
 
           <div className="p-6">
-          <div className="max-w-3xl mx-auto space-y-0">
+          <div className="max-w-3xl mx-auto">
             {activeTab === 'cadastro'  && <TabCadastro  patient={patient} onUpdate={loadPatient} />}
             {activeTab === 'diario'    && <TabDiario    patient={patient} />}
             {activeTab === 'fezes'     && <TabFezes     patient={patient} />}
             {activeTab === 'graficos'  && <TabGraficos  patient={patient} />}
             {activeTab === 'receitas'  && <TabReceitas  patient={patient} />}
-
-            {/* ── Seção informativa em mobile (abaixo do conteúdo principal) ── */}
-            <div className="lg:hidden mt-6">
-              <button
-                onClick={() => setMobileInfoOpen(o => !o)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <Lightbulb size={16} className="text-amber-500" />
-                  Dicas, Marcos &amp; Vacinas
-                </span>
-                {mobileInfoOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-              {mobileInfoOpen && (
-                <div className="mt-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
-                  {/* mini-tabs */}
-                  <div className="flex border-b border-slate-100 p-2 gap-1">
-                    {SIDEBAR_TABS.map(t => {
-                      const Icon = t.icon
-                      return (
-                        <button key={t.id} onClick={() => setSidePanel(t.id)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all
-                            ${sidePanel === t.id
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-slate-500 hover:bg-slate-100'}`}>
-                          <Icon size={13} />{t.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <div className="p-4">
-                    {sidePanel === 'dicas'   && <TabDicas   patient={patient} />}
-                    {sidePanel === 'marcos'  && <TabMarcos  birthdate={patient.birthdate} />}
-                    {sidePanel === 'vacinas' && <TabVacinas birthdate={patient.birthdate} />}
-                  </div>
-                </div>
-              )}
-            </div>
+            {activeTab === 'dicas'     && <TabDicas     patient={patient} />}
+            {activeTab === 'marcos'    && <TabMarcos    birthdate={patient.birthdate} />}
+            {activeTab === 'vacinas'   && <TabVacinas   birthdate={patient.birthdate} />}
           </div>
-          </div>{/* /p-6 */}
+          </div>
         </div>
-
-        {/* ── Sidebar informativa (desktop) ── */}
-        <aside className="hidden lg:flex flex-col w-72 xl:w-80 border-l border-slate-100 bg-slate-50 shrink-0">
-          {/* mini-tabs da sidebar */}
-          <div className="flex gap-1 p-2 bg-white border-b border-slate-100 shrink-0">
-            {SIDEBAR_TABS.map(t => {
-              const Icon = t.icon
-              return (
-                <button key={t.id} onClick={() => setSidePanel(t.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all
-                    ${sidePanel === t.id
-                      ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                      : 'text-slate-500 hover:bg-slate-100'}`}>
-                  <Icon size={13} />{t.label}
-                </button>
-              )
-            })}
-          </div>
-          {/* conteúdo da sidebar */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {sidePanel === 'dicas'   && <TabDicas   patient={patient} />}
-            {sidePanel === 'marcos'  && <TabMarcos  birthdate={patient.birthdate} />}
-            {sidePanel === 'vacinas' && <TabVacinas birthdate={patient.birthdate} />}
-          </div>
-        </aside>
-
-      </div>
 
       {/* Modal de confirmação de exclusão */}
       {confirmDel && (

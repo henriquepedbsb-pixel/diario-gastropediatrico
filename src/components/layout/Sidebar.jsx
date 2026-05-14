@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb,
-         ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText } from 'lucide-react'
+         ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
+         Milestone, Syringe } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
 
@@ -10,6 +11,9 @@ const DOCTOR_TABS = [
   { id: 'fezes',    label: 'Fezes',             icon: Droplets        },
   { id: 'graficos', label: 'Gráficos',          icon: TrendingUp      },
   { id: 'receitas', label: 'Receitas',          icon: FileText        },
+  { id: 'dicas',    label: 'Dicas',             icon: Lightbulb       },
+  { id: 'marcos',   label: 'Marcos',            icon: Milestone       },
+  { id: 'vacinas',  label: 'Vacinas',           icon: Syringe         },
 ]
 
 const PARENT_TABS = [
@@ -17,6 +21,9 @@ const PARENT_TABS = [
   { id: 'refeicoes', label: 'Refeições', icon: UtensilsCrossed },
   { id: 'fezes',     label: 'Fezes',     icon: Droplets        },
   { id: 'receitas',  label: 'Receitas',  icon: FileText        },
+  { id: 'dicas',     label: 'Dicas',     icon: Lightbulb       },
+  { id: 'marcos',    label: 'Marcos',    icon: Milestone       },
+  { id: 'vacinas',   label: 'Vacinas',   icon: Syringe         },
 ]
 
 export default function Sidebar({ onClose }) {
