@@ -36,26 +36,21 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
 
-          {/* Topo colorido */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-8 text-white text-center">
-            {/* Foto do médico */}
-            <div className="relative w-36 h-36 mx-auto mb-4">
-              <img
-                src="/medico.jpg"
-                alt="Dr. Henrique Gomes"
-                className="w-36 h-36 rounded-full object-cover object-top border-4 border-white/40 shadow-lg"
-                onError={e => {
-                  e.target.style.display = 'none'
-                  e.target.nextSibling.style.display = 'flex'
-                }}
-              />
-              {/* Fallback: ícone caso a foto não carregue */}
-              <div className="w-36 h-36 bg-white/20 rounded-full items-center justify-center hidden absolute inset-0">
-                <Stethoscope size={48} />
-              </div>
+          {/* Topo — foto como pano de fundo */}
+          <div className="relative h-52 overflow-hidden">
+            {/* Foto de fundo */}
+            <img
+              src="/medico.jpg"
+              alt="Dr. Henrique Gomes"
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+            {/* Overlay gradiente para legibilidade do texto */}
+            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-blue-800/40 to-transparent" />
+            {/* Texto sobre a foto */}
+            <div className="absolute bottom-0 left-0 right-0 px-8 py-5 text-white text-center">
+              <h1 className="text-xl font-bold tracking-tight drop-shadow">Dr. Henrique Gomes</h1>
+              <p className="text-blue-100 text-sm mt-0.5 drop-shadow">Gastropediatria · Diário Clínico</p>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">Dr. Henrique Gomes</h1>
-            <p className="text-blue-200 text-sm mt-0.5">Gastropediatria · Diário Clínico</p>
           </div>
 
           {/* Formulário */}
