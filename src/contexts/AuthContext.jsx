@@ -18,7 +18,8 @@ export function AuthProvider({ children }) {
   const [profile,  setProfile]  = useState(null)
   const [paciente, setPaciente] = useState(null)
   const [loading,  setLoading]  = useState(true)   // começa true — só false depois da 1ª verificação
-  const duranteSignup = useRef(false)
+  const duranteSignup    = useRef(false)
+  const perfilCarregado  = useRef(null)   // userId do último perfil setado manualmente
 
   /* ─── busca perfil no banco ─── */
   const carregarPerfil = async (userId, userEmail) => {
@@ -97,9 +98,17 @@ export function AuthProvider({ children }) {
       setSession(sess)
 
       if (!duranteSignup.current) {
-        setLoading(true)
-        setProfile(null)
-        carregarPerfil(sess.user.id, sess.user.email)
+        if (perfilCarregado.current === sess.user.id) {
+          // Perfil já setado manualmente durante o signup — só atualiza a sessão
+          perfilCarregado.current = null
+          setSession(sess)
+        } else {
+          // Login normal ou sessão restaurada → busca perfil no banco
+          setLoading(true)
+          setProfile(null)
+          setSession(sess)
+          carregarPerfil(sess.user.id, sess.user.email)
+        }
       }
     })
 
@@ -130,8 +139,10 @@ export function AuthProvider({ children }) {
         .insert({ id: uid, role: 'medico', full_name })
       if (pe) throw pe
 
+      perfilCarregado.current = uid
       setSession(data.session)
       setProfile({ id: uid, role: 'medico', full_name })
+      setLoading(false)
       return data
     } finally {
       duranteSignup.current = false
@@ -176,10 +187,11 @@ export function AuthProvider({ children }) {
       }
 
       // Atualiza todo o estado de uma vez e libera o loading
+      perfilCarregado.current = uid   // sinaliza que o próximo evento de auth pode ser ignorado
       setSession(data.session)
       setProfile({ id: uid, role: 'pai', full_name })
       setPaciente(pac)
-      setLoading(false)   // ← garante que loading nunca fica travado após signup
+      setLoading(false)
       return data
     } finally {
       duranteSignup.current = false
