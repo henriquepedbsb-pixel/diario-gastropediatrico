@@ -52,11 +52,11 @@ export default function CurriculoPage() {
       {/* Cabeçalho */}
       <div className="card overflow-hidden">
         {/* Foto de destaque */}
-        <div className="relative h-56 sm:h-72 bg-slate-100 overflow-hidden">
+        <div className="relative overflow-hidden">
           <img
             src="/medico.jpg"
             alt="Dr. Henrique Gomes"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-auto block"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />
           <div className="absolute bottom-4 left-5 right-5">
