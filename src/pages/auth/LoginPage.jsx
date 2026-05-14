@@ -36,16 +36,16 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
 
-          {/* Topo — foto como pano de fundo */}
-          <div className="relative h-52 overflow-hidden">
-            {/* Foto de fundo */}
+          {/* Topo — foto inteira como pano de fundo */}
+          <div className="relative overflow-hidden">
+            {/* Foto sem corte — ocupa a largura toda e altura natural */}
             <img
               src="/medico.jpg"
               alt="Dr. Henrique Gomes"
-              className="absolute inset-0 w-full h-full object-cover object-top"
+              className="w-full block"
             />
-            {/* Overlay gradiente para legibilidade do texto */}
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-blue-800/40 to-transparent" />
+            {/* Overlay gradiente só na base para o texto */}
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-blue-900/85 to-transparent" />
             {/* Texto sobre a foto */}
             <div className="absolute bottom-0 left-0 right-0 px-8 py-5 text-white text-center">
               <h1 className="text-xl font-bold tracking-tight drop-shadow">Dr. Henrique Gomes</h1>
