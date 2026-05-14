@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { isDoctor } from '../../lib/utils'
 
 export default function Sidebar({ onClose }) {
   const navigate = useNavigate()
   const { profile, signOut } = useAuth()
-  const isMedico = profile?.role === 'medico'
+  const isMedico = isDoctor(profile?.role)
 
   const handleLogout = async () => {
     await signOut()

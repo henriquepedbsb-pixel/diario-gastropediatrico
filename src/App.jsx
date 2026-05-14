@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { isDoctor, isPai } from './lib/utils'
 import Layout from './components/layout/Layout'
 import LoadingScreen from './components/ui/LoadingScreen'
 import LoginPage from './pages/auth/LoginPage'
@@ -18,10 +19,9 @@ function RootRedirect() {
   console.log('[RootRedirect] loading:', loading, '| role:', profile?.role ?? 'null')
   if (loading)                        return <LoadingScreen />
   if (!session)                       return <Navigate to="/login"     replace />
-  if (profile?.role === 'medico')     return <Navigate to="/dashboard" replace />
-  if (profile?.role === 'pai')        return <Navigate to="/diario"    replace />
-  // Sessão existe mas role não reconhecido → evita loop infinito
-  if (profile && !profile.role)       return <Navigate to="/login"     replace />
+  if (isDoctor(profile?.role))        return <Navigate to="/dashboard" replace />
+  if (isPai(profile?.role))           return <Navigate to="/diario"    replace />
+  if (profile)                        return <Navigate to="/login"     replace />
   return <LoadingScreen />
 }
 
@@ -37,7 +37,7 @@ function ProtectedLayout() {
 function SomenteMedico() {
   const { profile, loading } = useAuth()
   if (loading) return <LoadingScreen />
-  if (profile?.role !== 'medico') return <Navigate to="/" replace />
+  if (!isDoctor(profile?.role)) return <Navigate to="/" replace />
   return <Outlet />
 }
 
@@ -45,7 +45,7 @@ function SomenteMedico() {
 function SomentePai() {
   const { profile, loading } = useAuth()
   if (loading) return <LoadingScreen />
-  if (profile?.role !== 'pai') return <Navigate to="/" replace />
+  if (!isPai(profile?.role)) return <Navigate to="/" replace />
   return <Outlet />
 }
 

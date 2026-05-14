@@ -1,24 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { normalizeRole, isPai } from '../lib/utils'
 
 const AuthContext = createContext(null)
-
-// Mapeia qualquer variação de role do banco para 'medico' ou 'pai'
-const ROLE_MAP = {
-  // médico
-  medico:      'medico',
-  médico:      'medico',
-  doctor:      'medico',
-  doutor:      'medico',
-  // pai / responsável
-  pai:         'pai',
-  mae:         'pai',
-  mãe:         'pai',
-  parent:      'pai',
-  responsavel: 'pai',
-  responsável: 'pai',
-  guardian:    'pai',
-}
 
 export function AuthProvider({ children }) {
   const [session,  setSession]  = useState(null)
@@ -41,15 +25,14 @@ export function AuthProvider({ children }) {
 
       if (error || !prof) return
 
-      const roleRaw = (prof.role ?? prof.funcao ?? '').trim().toLowerCase()
-      const role    = ROLE_MAP[roleRaw] ?? null   // null se não reconhecido
+      const role = normalizeRole(prof.role ?? prof.funcao)
 
-      console.log('[Auth] role bruto:', JSON.stringify(prof.role), '→ mapeado:', role)
+      console.log('[Auth] role bruto:', JSON.stringify(prof.role), '→ normalizado:', role)
 
       const profileFinal = { ...prof, role }
       setProfile(profileFinal)
 
-      if (role === 'pai') {
+      if (isPai(role)) {
         // 1ª tentativa: já vinculado por parent_id
         let { data: pac } = await supabase
           .from('patients')
