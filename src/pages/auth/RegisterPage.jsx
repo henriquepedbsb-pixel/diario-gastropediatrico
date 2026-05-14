@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { Eye, EyeOff, Stethoscope, Users, Baby, Loader2, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, Stethoscope, Users, Loader2, CheckCircle, Info } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function RegisterPage() {
@@ -36,11 +36,6 @@ export default function RegisterPage() {
           email:     values.email,
           password:  values.password,
           full_name: values.nome,
-          crianca: {
-            nome:       values.crianca_nome,
-            nascimento: values.crianca_nascimento,
-            sexo:       values.crianca_sexo,
-          },
         })
       }
       setSucesso(true)
@@ -236,48 +231,16 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* ── Campos extras: dados da criança (pai) ── */}
+            {/* ── Aviso para responsável ── */}
             {tipoSel === 'pai' && (
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Baby size={16} className="text-green-600" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-700">Dados do paciente</p>
-                </div>
-
-                <div>
-                  <label className="label">Nome completo da criança</label>
-                  <input
-                    className="input bg-white"
-                    placeholder="Nome da criança"
-                    {...register('crianca_nome', {
-                      required: tipoSel === 'pai' ? 'Nome da criança obrigatório' : false,
-                    })}
-                  />
-                  {errors.crianca_nome && <p className="mt-1 text-xs text-red-500">{errors.crianca_nome.message}</p>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="label">Data de nascimento</label>
-                    <input
-                      type="date"
-                      className="input bg-white"
-                      {...register('crianca_nascimento', {
-                        required: tipoSel === 'pai' ? 'Data obrigatória' : false,
-                      })}
-                    />
-                    {errors.crianca_nascimento && <p className="mt-1 text-xs text-red-500">{errors.crianca_nascimento.message}</p>}
-                  </div>
-                  <div>
-                    <label className="label">Sexo</label>
-                    <select className="input bg-white" {...register('crianca_sexo')}>
-                      <option value="">—</option>
-                      <option value="M">Masculino</option>
-                      <option value="F">Feminino</option>
-                    </select>
-                  </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+                <Info size={18} className="text-blue-500 shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800 space-y-1">
+                  <p className="font-semibold">Como funciona o acesso?</p>
+                  <p className="text-blue-700 leading-relaxed">
+                    O Dr. Henrique Gomes cadastra o paciente e informa o seu e-mail.
+                    Ao criar conta com esse mesmo e-mail, o vínculo é feito automaticamente.
+                  </p>
                 </div>
               </div>
             )}

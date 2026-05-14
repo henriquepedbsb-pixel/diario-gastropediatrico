@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
   const duranteSignup = useRef(false)
 
   /* ─── busca perfil no banco ─── */
-  const carregarPerfil = async (userId) => {
+  const carregarPerfil = async (userId, userEmail) => {
     try {
       const { data: prof, error } = await supabase
         .from('profiles')
@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
 
       console.log('[Auth] perfil bruto:', prof, '| erro:', error)
 
-      if (error || !prof) return  // sem perfil: loading será false, session null ou não
+      if (error || !prof) return
 
       const roleRaw = (prof.role ?? prof.funcao ?? '').toLowerCase()
       const role    = ROLE_MAP[roleRaw] ?? roleRaw
@@ -42,17 +42,39 @@ export function AuthProvider({ children }) {
       setProfile(profileFinal)
 
       if (role === 'pai') {
-        const { data: pac } = await supabase
+        // 1ª tentativa: já vinculado por parent_id
+        let { data: pac } = await supabase
           .from('patients')
           .select('*')
           .eq('parent_id', userId)
           .maybeSingle()
+
+        // 2ª tentativa: médico cadastrou o e-mail mas responsável ainda não tinha conta
+        if (!pac && userEmail) {
+          const { data: pendente } = await supabase
+            .from('patients')
+            .select('*')
+            .eq('parent_email', userEmail.toLowerCase())
+            .is('parent_id', null)
+            .maybeSingle()
+
+          if (pendente) {
+            // Auto-vincula: salva parent_id e limpa parent_email
+            await supabase
+              .from('patients')
+              .update({ parent_id: userId, parent_email: null })
+              .eq('id', pendente.id)
+            pac = { ...pendente, parent_id: userId, parent_email: null }
+            console.log('[Auth] auto-vínculo por e-mail para paciente', pendente.id)
+          }
+        }
+
         setPaciente(pac ?? null)
       }
     } catch (err) {
       console.error('[Auth] carregarPerfil erro:', err.message)
     } finally {
-      setLoading(false)   // ← loading=false SÓ AQUI, depois de tudo resolvido
+      setLoading(false)
     }
   }
 
@@ -72,9 +94,9 @@ export function AuthProvider({ children }) {
       setSession(sess)
 
       if (!duranteSignup.current) {
-        setLoading(true)   // ← loading=true ANTES de buscar o perfil
+        setLoading(true)
         setProfile(null)
-        carregarPerfil(sess.user.id)
+        carregarPerfil(sess.user.id, sess.user.email)
       }
     })
 
@@ -114,7 +136,7 @@ export function AuthProvider({ children }) {
   }
 
   /* ─── cadastro pai/responsável ─── */
-  const signUpPai = async ({ email, password, full_name, crianca }) => {
+  const signUpPai = async ({ email, password, full_name }) => {
     duranteSignup.current = true
     try {
       const { data, error } = await supabase.auth.signUp({ email, password })
@@ -128,17 +150,23 @@ export function AuthProvider({ children }) {
         .insert({ id: uid, role: 'pai', full_name })
       if (pe) throw pe
 
-      const { data: pac, error: ce } = await supabase
-        .from('pacientes')
-        .insert({
-          nome:            crianca.nome,
-          data_nascimento: crianca.nascimento,
-          sexo:            crianca.sexo || null,
-          parent_id:       uid,
-        })
-        .select()
-        .single()
-      if (ce) throw ce
+      // Verifica se médico já cadastrou paciente com este e-mail (vínculo pendente)
+      let pac = null
+      const { data: pendente } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('parent_email', email.toLowerCase())
+        .is('parent_id', null)
+        .maybeSingle()
+
+      if (pendente) {
+        await supabase
+          .from('patients')
+          .update({ parent_id: uid, parent_email: null })
+          .eq('id', pendente.id)
+        pac = { ...pendente, parent_id: uid, parent_email: null }
+        console.log('[Auth] vínculo automático no cadastro para paciente', pendente.id)
+      }
 
       setSession(data.session)
       setProfile({ id: uid, role: 'pai', full_name })

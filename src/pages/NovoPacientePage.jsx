@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { ArrowLeft, Baby, Users, Scale, X, Plus, Loader2 } from 'lucide-react'
+import { ArrowLeft, Baby, Users, Scale, X, Plus, Loader2, Mail } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -85,17 +85,28 @@ export default function NovoPacientePage() {
       if (values.notes?.trim())       notesObj.notas = values.notes.trim()
       const notesJson = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
 
+      // ── Tenta resolver o UUID do responsável pelo e-mail ──
+      const emailResp = values.parent_email?.trim().toLowerCase() || null
+      let parentId    = null
+
+      if (emailResp) {
+        const { data: uid } = await supabase
+          .rpc('get_user_id_by_email', { p_email: emailResp })
+        parentId = uid ?? null
+      }
+
       // ── Insere o paciente ──
       const { data: patient, error: patientError } = await supabase
         .from('patients')
         .insert({
-          name:       values.name.trim(),
-          birthdate:  values.birthdate,
-          gender:     values.gender   || null,
-          blood_type: values.blood_type || null,
-          allergies:  allergies.length ? allergies : null,
-          notes:      notesJson,
-          parent_id:  session.user.id,
+          name:         values.name.trim(),
+          birthdate:    values.birthdate,
+          gender:       values.gender    || null,
+          blood_type:   values.blood_type || null,
+          allergies:    allergies.length  ? allergies : null,
+          notes:        notesJson,
+          parent_id:    parentId,                        // UUID se já tem conta, null se não
+          parent_email: parentId ? null : emailResp,     // salva e-mail para vínculo posterior
         })
         .select()
         .single()
@@ -232,6 +243,25 @@ export default function NovoPacientePage() {
               />
             </Field>
           </div>
+
+          {/* E-mail do responsável para vínculo no app */}
+          <Field
+            label="E-mail do responsável no app"
+            hint="Se o responsável já tiver conta, será vinculado automaticamente. Caso contrário, o vínculo ocorre no primeiro login."
+            error={errors.parent_email?.message}
+          >
+            <div className="relative">
+              <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="email"
+                className="input pl-9"
+                placeholder="email@responsavel.com"
+                {...register('parent_email', {
+                  pattern: { value: /\S+@\S+\.\S+/, message: 'E-mail inválido' },
+                })}
+              />
+            </div>
+          </Field>
         </div>
 
         {/* ── Dados de Nascimento ── */}

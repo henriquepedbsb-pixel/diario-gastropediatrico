@@ -751,10 +751,26 @@ export default function DiarioPage() {
   /* Paciente não vinculado */
   if (!paciente) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400 p-6">
-        <Baby size={40} className="opacity-30" />
-        <p className="text-sm font-medium">Nenhum paciente vinculado à sua conta</p>
-        <p className="text-xs text-center">Entre em contato com o Dr. Henrique Gomes para vincular o perfil do seu filho.</p>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4 p-8 text-center">
+        <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center">
+          <Baby size={36} className="text-blue-300" />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-700 text-base">Nenhum paciente vinculado</p>
+          <p className="text-sm text-slate-500 mt-1 max-w-xs">
+            Seu perfil ainda não está associado a nenhum paciente.
+            Solicite ao Dr. Henrique Gomes que cadastre o seu filho informando o e-mail da sua conta.
+          </p>
+        </div>
+        <a
+          href="mailto:henriquepedbsb@gmail.com?subject=Solicitar%20vínculo%20de%20paciente&body=Olá%20Dr.%20Henrique%2C%20gostaria%20de%20vincular%20meu%20perfil%20ao%20paciente."
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
+        >
+          ✉️ Solicitar acesso ao médico
+        </a>
+        <p className="text-xs text-slate-400">
+          Após o vínculo ser feito, basta sair e entrar novamente na conta.
+        </p>
       </div>
     )
   }
