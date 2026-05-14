@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
-         ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight } from 'lucide-react'
+         ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
+         Milestone, Syringe } from 'lucide-react'
+import TabMarcos  from '../components/paciente/TabMarcos'
+import TabVacinas from '../components/paciente/TabVacinas'
 import { useAuth } from '../contexts/AuthContext'
 import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -1553,6 +1556,8 @@ const TABS = [
   { id: 'graficos', label: 'Gráficos',          icon: TrendingUp      },
   { id: 'receitas', label: 'Receitas',          icon: FileText        },
   { id: 'dicas',    label: 'Dicas',             icon: Lightbulb       },
+  { id: 'marcos',   label: 'Marcos',            icon: Milestone       },
+  { id: 'vacinas',  label: 'Vacinas',           icon: Syringe         },
 ]
 
 export default function PacienteDetailPage() {
@@ -1700,6 +1705,8 @@ export default function PacienteDetailPage() {
           {activeTab === 'graficos'  && <TabGraficos  patient={patient} />}
           {activeTab === 'receitas'  && <TabReceitas  patient={patient} />}
           {activeTab === 'dicas'     && <TabDicas     patient={patient} />}
+          {activeTab === 'marcos'    && <TabMarcos  birthdate={patient.birthdate} />}
+          {activeTab === 'vacinas'   && <TabVacinas birthdate={patient.birthdate} />}
         </div>
       </div>
 

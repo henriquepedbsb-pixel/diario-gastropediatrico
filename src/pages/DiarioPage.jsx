@@ -4,9 +4,12 @@ import { ptBR } from 'date-fns/locale'
 import {
   UtensilsCrossed, FileText, Lightbulb, Droplets,
   Plus, Trash2, Loader2, Baby, X, Upload, Paperclip,
+  Milestone, Syringe,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import TabMarcos  from '../components/paciente/TabMarcos'
+import TabVacinas from '../components/paciente/TabVacinas'
 
 /* ─── helpers ─── */
 
@@ -767,6 +770,8 @@ const TABS = [
   { id: 'fezes',     label: 'Fezes',     icon: Droplets        },
   { id: 'receitas',  label: 'Receitas',  icon: FileText        },
   { id: 'dicas',     label: 'Dicas',     icon: Lightbulb       },
+  { id: 'marcos',    label: 'Marcos',    icon: Milestone       },
+  { id: 'vacinas',   label: 'Vacinas',   icon: Syringe         },
 ]
 
 export default function DiarioPage() {
@@ -855,6 +860,8 @@ export default function DiarioPage() {
           {tab === 'fezes'     && <TabFezes     patient={paciente} />}
           {tab === 'receitas'  && <TabReceitas  patient={paciente} />}
           {tab === 'dicas'     && <TabDicas />}
+          {tab === 'marcos'    && <TabMarcos  birthdate={paciente.birthdate} />}
+          {tab === 'vacinas'   && <TabVacinas birthdate={paciente.birthdate} />}
         </div>
       </div>
     </div>
