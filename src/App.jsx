@@ -17,10 +17,12 @@ function RootRedirect() {
   const { profile, session, loading } = useAuth()
   console.log('[RootRedirect] loading:', loading, '| role:', profile?.role ?? 'null')
   if (loading)                        return <LoadingScreen />
+  if (!session)                       return <Navigate to="/login"     replace />
   if (profile?.role === 'medico')     return <Navigate to="/dashboard" replace />
   if (profile?.role === 'pai')        return <Navigate to="/diario"    replace />
-  if (!session)                       return <Navigate to="/login"     replace />
-  return <LoadingScreen /> // sessão existe mas perfil ainda resolvendo — aguarda
+  // Sessão existe mas role não reconhecido → evita loop infinito
+  if (profile && !profile.role)       return <Navigate to="/login"     replace />
+  return <LoadingScreen />
 }
 
 /* ── Protege rotas: redireciona para login se não autenticado ── */

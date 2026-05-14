@@ -3,14 +3,21 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
-// Mapeia qualquer variação de role do banco para os valores que o app entende
+// Mapeia qualquer variação de role do banco para 'medico' ou 'pai'
 const ROLE_MAP = {
+  // médico
   medico:      'medico',
+  médico:      'medico',
   doctor:      'medico',
   doutor:      'medico',
+  // pai / responsável
   pai:         'pai',
+  mae:         'pai',
+  mãe:         'pai',
   parent:      'pai',
   responsavel: 'pai',
+  responsável: 'pai',
+  guardian:    'pai',
 }
 
 export function AuthProvider({ children }) {
@@ -34,10 +41,10 @@ export function AuthProvider({ children }) {
 
       if (error || !prof) return
 
-      const roleRaw = (prof.role ?? prof.funcao ?? '').toLowerCase()
-      const role    = ROLE_MAP[roleRaw] ?? roleRaw
+      const roleRaw = (prof.role ?? prof.funcao ?? '').trim().toLowerCase()
+      const role    = ROLE_MAP[roleRaw] ?? null   // null se não reconhecido
 
-      console.log('[Auth] role mapeado:', roleRaw, '→', role)
+      console.log('[Auth] role bruto:', JSON.stringify(prof.role), '→ mapeado:', role)
 
       const profileFinal = { ...prof, role }
       setProfile(profileFinal)
