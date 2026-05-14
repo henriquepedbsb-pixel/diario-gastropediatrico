@@ -8,6 +8,13 @@ import {
 import { differenceInMonths, differenceInYears, parseISO, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '../lib/supabase'
+
+function saudacao() {
+  const h = new Date().getHours()
+  if (h >= 5  && h < 12) return 'Bom dia'
+  if (h >= 12 && h < 18) return 'Boa tarde'
+  return 'Boa noite'
+}
 import { useAuth } from '../contexts/AuthContext'
 
 /* ── Calcula idade legível ── */
@@ -162,7 +169,7 @@ export default function HomePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="page-title">
-            Bom dia{profile?.full_name ? `, ${profile.full_name.startsWith('Dr') ? profile.full_name.split(' ').slice(0, 2).join(' ') : `Dr. ${profile.full_name.split(' ')[0]}`}` : ''} 👋
+            {saudacao()}{profile?.full_name ? `, ${profile.full_name.startsWith('Dr') ? profile.full_name.split(' ').slice(0, 2).join(' ') : `Dr. ${profile.full_name.split(' ')[0]}`}` : ''} 👋
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}

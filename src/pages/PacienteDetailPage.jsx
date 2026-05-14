@@ -162,8 +162,10 @@ function TabDiario({ patient }) {
             return (
               <div key={e.id} className="card overflow-hidden">
                 {e.photo_url && (
-                  <img src={e.photo_url} alt="foto da refeição"
-                    className="w-full h-40 object-cover" />
+                  <div className="w-full aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
+                    <img src={e.photo_url} alt="foto da refeição"
+                      className="w-full h-full object-contain" />
+                  </div>
                 )}
                 <div className="p-4 flex items-start gap-3">
                   <span className="text-2xl shrink-0 mt-0.5">{ref.emoji}</span>
@@ -1559,6 +1561,24 @@ export default function PacienteDetailPage() {
   const [patient,    setPatient]   = useState(null)
   const [loading,    setLoading]   = useState(true)
   const [activeTab,  setActiveTab] = useState('cadastro')
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [deletando,  setDeletando]  = useState(false)
+
+  const handleDeletePaciente = async () => {
+    setDeletando(true)
+    try {
+      await supabase.from('meals')         .delete().eq('patient_id', id)
+      await supabase.from('stool_records') .delete().eq('patient_id', id)
+      await supabase.from('growth_records').delete().eq('patient_id', id)
+      await supabase.from('prescriptions') .delete().eq('patient_id', id)
+      await supabase.from('patients')      .delete().eq('id', id)
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      console.error('Erro ao excluir paciente:', err)
+      setDeletando(false)
+      setConfirmDel(false)
+    }
+  }
 
   const loadPatient = () => {
     supabase.from('patients').select('*').eq('id', id).single()
@@ -1612,7 +1632,16 @@ export default function PacienteDetailPage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-slate-800 text-lg leading-tight truncate">{patient.name}</h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="font-bold text-slate-800 text-lg leading-tight truncate">{patient.name}</h1>
+              <button
+                onClick={() => setConfirmDel(true)}
+                title="Excluir paciente"
+                className="shrink-0 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className="text-sm text-slate-500">{calcIdade(patient.birthdate)}</span>
               {patient.gender && (
@@ -1673,6 +1702,43 @@ export default function PacienteDetailPage() {
           {activeTab === 'dicas'     && <TabDicas     patient={patient} />}
         </div>
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      {confirmDel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <Trash2 size={22} className="text-red-600" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-semibold text-slate-800 text-lg">Excluir paciente?</h3>
+              <p className="text-sm text-slate-500">
+                Todos os dados de <strong>{patient.name}</strong> serão removidos permanentemente —
+                refeições, fezes, gráficos, prescrições e cadastro.
+              </p>
+              <p className="text-xs text-red-500 font-medium">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setConfirmDel(false)}
+                disabled={deletando}
+                className="btn-secondary flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeletePaciente}
+                disabled={deletando}
+                className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 rounded-xl transition-colors disabled:opacity-60"
+              >
+                {deletando
+                  ? <><Loader2 size={15} className="animate-spin" /> Excluindo…</>
+                  : <><Trash2 size={15} /> Excluir</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

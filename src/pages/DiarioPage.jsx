@@ -196,8 +196,10 @@ function TabRefeicoes({ patient }) {
                   return (
                     <div key={e.id} className="card overflow-hidden">
                       {e.photo_url && (
-                        <img src={e.photo_url} alt="foto"
-                          className="w-full h-44 object-cover" />
+                        <div className="w-full aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
+                          <img src={e.photo_url} alt="foto"
+                            className="w-full h-full object-contain" />
+                        </div>
                       )}
                       <div className="p-4 flex items-start gap-3">
                         <span className="text-2xl shrink-0 mt-0.5">{ref.emoji}</span>
