@@ -50,14 +50,26 @@ export default function CurriculoPage() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
 
       {/* Cabeçalho */}
-      <div className="card p-6 flex items-start gap-5">
-        <div className="w-16 h-16 rounded-2xl bg-teal-600 flex items-center justify-center shrink-0">
-          <Stethoscope size={30} className="text-white" />
+      <div className="card overflow-hidden">
+        {/* Foto de destaque */}
+        <div className="relative h-56 sm:h-72 bg-slate-100 overflow-hidden">
+          <img
+            src="/medico.jpg"
+            alt="Dr. Henrique Gomes"
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />
+          <div className="absolute bottom-4 left-5 right-5">
+            <h1 className="text-xl font-bold text-white leading-tight drop-shadow">Dr. Henrique Gomes</h1>
+            <p className="text-sm text-teal-300 font-medium mt-0.5 drop-shadow">Pediatra · Gastropediatra</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 leading-tight">Dr. Henrique Gomes</h1>
-          <p className="text-sm text-teal-600 font-medium mt-0.5">Pediatra · Gastropediatra</p>
-          <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+        {/* Bio */}
+        <div className="px-5 py-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center shrink-0 mt-0.5">
+            <Stethoscope size={16} className="text-white" />
+          </div>
+          <p className="text-sm text-slate-500 leading-relaxed">
             Atendimento em pediatria e gastropediatria individualizado para cada paciente.
             Experiência em bebês prematuros. Prevenção é sempre o melhor remédio.
           </p>
