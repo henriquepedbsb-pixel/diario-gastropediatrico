@@ -15,15 +15,28 @@ export function AuthProvider({ children }) {
   /* ─── busca perfil no banco ─── */
   const carregarPerfil = async (userId, userEmail) => {
     try {
-      const { data: prof, error } = await supabase
+      let { data: prof } = await supabase
         .from('profiles')
-        .select('id, full_name, role, phone, avatar_url')
+        .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
-      console.log('[Auth] perfil completo:', prof, '| erro:', error)
+      console.log('[Auth] perfil bruto:', prof)
 
-      if (error || !prof) return
+      // Perfil não existe → cria automaticamente como responsável
+      if (!prof) {
+        console.log('[Auth] perfil não encontrado, criando automaticamente...')
+        const { data: novo, error: insErr } = await supabase
+          .from('profiles')
+          .insert({ id: userId, full_name: userEmail ?? userId, role: 'pai' })
+          .select()
+          .single()
+        if (insErr) {
+          console.error('[Auth] erro ao criar perfil:', insErr.message)
+          return
+        }
+        prof = novo
+      }
 
       const role = normalizeRole(prof.role ?? prof.funcao)
 
