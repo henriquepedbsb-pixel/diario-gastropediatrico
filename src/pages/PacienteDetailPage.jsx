@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
          ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
-         Milestone, Syringe } from 'lucide-react'
+         Milestone, Syringe, Camera, ChevronDown, ChevronUp } from 'lucide-react'
 import TabMarcos  from '../components/paciente/TabMarcos'
 import TabVacinas from '../components/paciente/TabVacinas'
 import { useAuth } from '../contexts/AuthContext'
@@ -1070,6 +1070,36 @@ function TabCadastro({ patient, onUpdate }) {
       .then(({ data }) => setNascimento(data ?? null))
   }, [patient.id])
 
+  /* ── foto ── */
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      const ext  = file.name.split('.').pop().toLowerCase()
+      const path = `${patient.id}/photo.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('patient-photos')
+        .upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage
+        .from('patient-photos')
+        .getPublicUrl(path)
+      await supabase.from('patients').update({ photo_url: publicUrl }).eq('id', patient.id)
+      onUpdate()
+    } catch (err) {
+      console.error('Erro ao enviar foto:', err.message)
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const handleRemovePhoto = async () => {
+    await supabase.from('patients').update({ photo_url: null }).eq('id', patient.id)
+    onUpdate()
+  }
+
   /* ── edição ── */
   const [editing, setEditing] = useState(false)
   const [saving,  setSaving]  = useState(false)
@@ -1174,14 +1204,48 @@ function TabCadastro({ patient, onUpdate }) {
       {/* ── Modo exibição ── */}
       {!editing && (
         <>
-          {/* Identificação */}
+          {/* Foto do paciente */}
           <div className="card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-slate-700 text-sm">Identificação</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-slate-700 text-sm">Foto do Paciente</h3>
               <button onClick={openEdit}
                 className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                 <Pencil size={13} /> Editar cadastro
               </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {patient.photo_url ? (
+                  <img src={patient.photo_url} alt={patient.name}
+                    className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-200" />
+                ) : (
+                  <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold
+                    ${patient.gender === 'M' ? 'bg-blue-100 text-blue-700' : patient.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-slate-100 text-slate-600'}`}>
+                    {patient.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className={`inline-flex items-center gap-1.5 cursor-pointer text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors ${uploadingPhoto ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <Camera size={13} />
+                  {uploadingPhoto ? 'Enviando…' : patient.photo_url ? 'Trocar foto' : 'Adicionar foto'}
+                  <input type="file" accept="image/*" className="hidden"
+                    onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                </label>
+                {patient.photo_url && (
+                  <button onClick={handleRemovePhoto}
+                    className="text-xs text-red-500 hover:text-red-700 text-left transition-colors">
+                    Remover foto
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Identificação */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-slate-700 text-sm">Identificação</h3>
             </div>
             <Row label="Nome" value={patient.name} />
             <Row label="Data de nascimento"
@@ -1623,9 +1687,12 @@ const TABS = [
   { id: 'fezes',    label: 'Fezes',             icon: Droplets        },
   { id: 'graficos', label: 'Gráficos',          icon: TrendingUp      },
   { id: 'receitas', label: 'Receitas',          icon: FileText        },
-  { id: 'dicas',    label: 'Dicas',             icon: Lightbulb       },
-  { id: 'marcos',   label: 'Marcos',            icon: Milestone       },
-  { id: 'vacinas',  label: 'Vacinas',           icon: Syringe         },
+]
+
+const SIDEBAR_TABS = [
+  { id: 'dicas',   label: 'Dicas',   icon: Lightbulb },
+  { id: 'marcos',  label: 'Marcos',  icon: Milestone },
+  { id: 'vacinas', label: 'Vacinas', icon: Syringe   },
 ]
 
 export default function PacienteDetailPage() {
@@ -1633,9 +1700,11 @@ export default function PacienteDetailPage() {
   const navigate     = useNavigate()
   const [patient,    setPatient]   = useState(null)
   const [loading,    setLoading]   = useState(true)
-  const [activeTab,  setActiveTab] = useState('cadastro')
-  const [confirmDel, setConfirmDel] = useState(false)
-  const [deletando,  setDeletando]  = useState(false)
+  const [activeTab,     setActiveTab]    = useState('cadastro')
+  const [sidePanel,     setSidePanel]    = useState('dicas')
+  const [mobileInfoOpen, setMobileInfoOpen] = useState(false)
+  const [confirmDel,    setConfirmDel]   = useState(false)
+  const [deletando,     setDeletando]    = useState(false)
 
   const handleDeletePaciente = async () => {
     setDeletando(true)
@@ -1700,8 +1769,15 @@ export default function PacienteDetailPage() {
             <ArrowLeft size={20} />
           </button>
 
-          <div className={`w-14 h-14 rounded-2xl ${avatarColor} flex items-center justify-center shrink-0`}>
-            <span className="text-white font-bold text-xl">{initials}</span>
+          <div className="w-14 h-14 rounded-2xl shrink-0 overflow-hidden">
+            {patient.photo_url ? (
+              <img src={patient.photo_url} alt={patient.name}
+                className="w-full h-full object-cover" />
+            ) : (
+              <div className={`w-full h-full ${avatarColor} flex items-center justify-center`}>
+                <span className="text-white font-bold text-xl">{initials}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -1764,18 +1840,83 @@ export default function PacienteDetailPage() {
         </div>
       </div>
 
-      {/* Conteúdo */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto">
-          {activeTab === 'cadastro'  && <TabCadastro  patient={patient} onUpdate={loadPatient} />}
-          {activeTab === 'diario'    && <TabDiario    patient={patient} />}
-          {activeTab === 'fezes'     && <TabFezes     patient={patient} />}
-          {activeTab === 'graficos'  && <TabGraficos  patient={patient} />}
-          {activeTab === 'receitas'  && <TabReceitas  patient={patient} />}
-          {activeTab === 'dicas'     && <TabDicas     patient={patient} />}
-          {activeTab === 'marcos'    && <TabMarcos  birthdate={patient.birthdate} />}
-          {activeTab === 'vacinas'   && <TabVacinas birthdate={patient.birthdate} />}
+      {/* Corpo: conteúdo principal + sidebar informativa */}
+      <div className="flex-1 overflow-hidden flex">
+
+        {/* ── Conteúdo principal ── */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-3xl mx-auto space-y-0">
+            {activeTab === 'cadastro'  && <TabCadastro  patient={patient} onUpdate={loadPatient} />}
+            {activeTab === 'diario'    && <TabDiario    patient={patient} />}
+            {activeTab === 'fezes'     && <TabFezes     patient={patient} />}
+            {activeTab === 'graficos'  && <TabGraficos  patient={patient} />}
+            {activeTab === 'receitas'  && <TabReceitas  patient={patient} />}
+
+            {/* ── Seção informativa em mobile (abaixo do conteúdo principal) ── */}
+            <div className="lg:hidden mt-6">
+              <button
+                onClick={() => setMobileInfoOpen(o => !o)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Lightbulb size={16} className="text-amber-500" />
+                  Dicas, Marcos &amp; Vacinas
+                </span>
+                {mobileInfoOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              {mobileInfoOpen && (
+                <div className="mt-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
+                  {/* mini-tabs */}
+                  <div className="flex border-b border-slate-100 p-2 gap-1">
+                    {SIDEBAR_TABS.map(t => {
+                      const Icon = t.icon
+                      return (
+                        <button key={t.id} onClick={() => setSidePanel(t.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all
+                            ${sidePanel === t.id
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-slate-500 hover:bg-slate-100'}`}>
+                          <Icon size={13} />{t.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="p-4">
+                    {sidePanel === 'dicas'   && <TabDicas   patient={patient} />}
+                    {sidePanel === 'marcos'  && <TabMarcos  birthdate={patient.birthdate} />}
+                    {sidePanel === 'vacinas' && <TabVacinas birthdate={patient.birthdate} />}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* ── Sidebar informativa (desktop) ── */}
+        <aside className="hidden lg:flex flex-col w-72 xl:w-80 border-l border-slate-100 bg-slate-50 shrink-0">
+          {/* mini-tabs da sidebar */}
+          <div className="flex gap-1 p-2 bg-white border-b border-slate-100 shrink-0">
+            {SIDEBAR_TABS.map(t => {
+              const Icon = t.icon
+              return (
+                <button key={t.id} onClick={() => setSidePanel(t.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all
+                    ${sidePanel === t.id
+                      ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                      : 'text-slate-500 hover:bg-slate-100'}`}>
+                  <Icon size={13} />{t.label}
+                </button>
+              )
+            })}
+          </div>
+          {/* conteúdo da sidebar */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {sidePanel === 'dicas'   && <TabDicas   patient={patient} />}
+            {sidePanel === 'marcos'  && <TabMarcos  birthdate={patient.birthdate} />}
+            {sidePanel === 'vacinas' && <TabVacinas birthdate={patient.birthdate} />}
+          </div>
+        </aside>
+
       </div>
 
       {/* Modal de confirmação de exclusão */}
