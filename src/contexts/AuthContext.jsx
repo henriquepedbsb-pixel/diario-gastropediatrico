@@ -15,16 +15,18 @@ export function AuthProvider({ children }) {
   /* ─── busca perfil no banco ─── */
   const carregarPerfil = async (userId, userEmail) => {
     try {
-      let { data: prof } = await supabase
+      const { data: profiles, error: queryErr } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, role')
         .eq('id', userId)
-        .maybeSingle()
+        .limit(1)
 
-      console.log('[Auth] perfil bruto:', prof)
+      console.log('[Auth] profiles query:', profiles, '| erro:', queryErr)
 
-      // Perfil não existe → cria automaticamente
-      if (!prof) {
+      let prof = profiles?.[0] || null
+
+      // Só cria se a query funcionou E não encontrou nada
+      if (!queryErr && (!profiles || profiles.length === 0)) {
         console.log('[Auth] perfil não encontrado, criando automaticamente...')
         const { data: { user } } = await supabase.auth.getUser()
         const roleNovo = user?.user_metadata?.role === 'doctor' ? 'doctor' : 'parent'
@@ -36,11 +38,16 @@ export function AuthProvider({ children }) {
             role:      roleNovo,
           })
           .select()
-          .maybeSingle()
+          .limit(1)
         console.log('[Auth] novo perfil:', novo, '| erro:', insErr)
-        if (insErr || !novo) return
-        prof = novo
+        if (insErr || !novo?.[0]) return
+        prof = novo[0]
+      } else if (queryErr) {
+        console.error('[Auth] erro na query do perfil:', queryErr.message)
+        return
       }
+
+      if (!prof) return
 
       const role = normalizeRole(prof.role ?? prof.funcao)
 
