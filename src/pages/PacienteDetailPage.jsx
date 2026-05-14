@@ -1060,13 +1060,16 @@ function TabCadastro({ patient, onUpdate }) {
   const [saving,  setSaving]  = useState(false)
   const [erro,    setErro]    = useState('')
   const [form, setForm] = useState({
-    name:        patient.name        || '',
-    birthdate:   patient.birthdate   || '',
-    gender:      patient.gender      || '',
-    blood_type:  patient.blood_type  || '',
-    father_name: notesData.pai       || '',
-    mother_name: notesData.mae       || '',
-    notas:       notesData.notas     || '',
+    name:            patient.name        || '',
+    birthdate:       patient.birthdate   || '',
+    gender:          patient.gender      || '',
+    blood_type:      patient.blood_type  || '',
+    father_name:     notesData.pai       || '',
+    mother_name:     notesData.mae       || '',
+    notas:           notesData.notas     || '',
+    birth_weight:    '',
+    birth_height:    '',
+    birth_head_circ: '',
   })
   const [editAllergies, setEditAllergies] = useState(allergies)
 
@@ -1078,13 +1081,16 @@ function TabCadastro({ patient, onUpdate }) {
       ? patient.allergies
       : patient.allergies ? patient.allergies.split(',').map(a => a.trim()) : []
     setForm({
-      name:        patient.name       || '',
-      birthdate:   patient.birthdate  || '',
-      gender:      patient.gender     || '',
-      blood_type:  patient.blood_type || '',
-      father_name: nd.pai   || '',
-      mother_name: nd.mae   || '',
-      notas:       nd.notas || '',
+      name:            patient.name       || '',
+      birthdate:       patient.birthdate  || '',
+      gender:          patient.gender     || '',
+      blood_type:      patient.blood_type || '',
+      father_name:     nd.pai   || '',
+      mother_name:     nd.mae   || '',
+      notas:           nd.notas || '',
+      birth_weight:    nascimento?.weight_kg             != null ? String(nascimento.weight_kg)             : '',
+      birth_height:    nascimento?.height_cm             != null ? String(nascimento.height_cm)             : '',
+      birth_head_circ: nascimento?.head_circumference_cm != null ? String(nascimento.head_circumference_cm) : '',
     })
     setEditAllergies(al)
     setErro('')
@@ -1111,6 +1117,25 @@ function TabCadastro({ patient, onUpdate }) {
       }).eq('id', patient.id)
 
       if (error) throw error
+
+      /* Dados antropométricos de nascimento → growth_records */
+      const hasBirth = form.birth_weight || form.birth_height || form.birth_head_circ
+      if (hasBirth && form.birthdate) {
+        const payload = {
+          patient_id:            patient.id,
+          recorded_at:           form.birthdate,
+          weight_kg:             form.birth_weight    ? parseFloat(form.birth_weight)    : null,
+          height_cm:             form.birth_height    ? parseFloat(form.birth_height)    : null,
+          head_circumference_cm: form.birth_head_circ ? parseFloat(form.birth_head_circ) : null,
+          notes:                 'Dados de nascimento',
+        }
+        if (nascimento?.id) {
+          await supabase.from('growth_records').update(payload).eq('id', nascimento.id)
+        } else {
+          await supabase.from('growth_records').insert(payload)
+        }
+      }
+
       setEditing(false)
       onUpdate()   // refetch do paciente no componente pai
     } catch (err) {
@@ -1254,6 +1279,34 @@ function TabCadastro({ patient, onUpdate }) {
                     </div>
                   </label>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Dados de Nascimento */}
+          <div className="space-y-3 pt-2 border-t border-slate-100">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Dados de Nascimento</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="label flex items-center gap-1"><Scale size={12} /> Peso (kg)</label>
+                <input type="number" step="0.001" min="0.3" max="8" className="input"
+                  placeholder="ex: 3.250"
+                  value={form.birth_weight}
+                  onChange={e => setForm(f => ({ ...f, birth_weight: e.target.value }))} />
+              </div>
+              <div>
+                <label className="label flex items-center gap-1"><Ruler size={12} /> Estatura (cm)</label>
+                <input type="number" step="0.1" min="20" max="70" className="input"
+                  placeholder="ex: 49.5"
+                  value={form.birth_height}
+                  onChange={e => setForm(f => ({ ...f, birth_height: e.target.value }))} />
+              </div>
+              <div>
+                <label className="label flex items-center gap-1"><Brain size={12} /> PC (cm)</label>
+                <input type="number" step="0.1" min="20" max="45" className="input"
+                  placeholder="ex: 34.0"
+                  value={form.birth_head_circ}
+                  onChange={e => setForm(f => ({ ...f, birth_head_circ: e.target.value }))} />
               </div>
             </div>
           </div>

@@ -1023,16 +1023,30 @@ function TabCadastroPai({ patient, onUpdate }) {
     ? patient.allergies
     : patient.allergies ? patient.allergies.split(',').map(a => a.trim()) : []
 
+  const [nascimento,    setNascimento]    = useState(null)
   const [editing,       setEditing]       = useState(false)
   const [saving,        setSaving]        = useState(false)
   const [erro,          setErro]          = useState('')
   const [editAllergies, setEditAllergies] = useState(allergiesInit)
   const [form, setForm] = useState({
-    blood_type:  patient.blood_type || '',
-    father_name: nd.pai   || '',
-    mother_name: nd.mae   || '',
-    notas:       nd.notas || '',
+    blood_type:      patient.blood_type || '',
+    father_name:     nd.pai   || '',
+    mother_name:     nd.mae   || '',
+    notas:           nd.notas || '',
+    birth_weight:    '',
+    birth_height:    '',
+    birth_head_circ: '',
   })
+
+  const loadNascimento = () =>
+    supabase.from('growth_records')
+      .select('id, weight_kg, height_cm, head_circumference_cm')
+      .eq('patient_id', patient.id)
+      .order('recorded_at', { ascending: true })
+      .limit(1).maybeSingle()
+      .then(({ data }) => setNascimento(data ?? null))
+
+  useEffect(() => { loadNascimento() }, [patient.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Sincroniza ao abrir edição */
   const openEdit = () => {
@@ -1041,7 +1055,15 @@ function TabCadastroPai({ patient, onUpdate }) {
     const al = Array.isArray(patient.allergies)
       ? patient.allergies
       : patient.allergies ? patient.allergies.split(',').map(a => a.trim()) : []
-    setForm({ blood_type: patient.blood_type || '', father_name: n.pai || '', mother_name: n.mae || '', notas: n.notas || '' })
+    setForm({
+      blood_type:      patient.blood_type || '',
+      father_name:     n.pai   || '',
+      mother_name:     n.mae   || '',
+      notas:           n.notas || '',
+      birth_weight:    nascimento?.weight_kg             != null ? String(nascimento.weight_kg)             : '',
+      birth_height:    nascimento?.height_cm             != null ? String(nascimento.height_cm)             : '',
+      birth_head_circ: nascimento?.head_circumference_cm != null ? String(nascimento.head_circumference_cm) : '',
+    })
     setEditAllergies(al)
     setErro('')
     setEditing(true)
@@ -1063,8 +1085,27 @@ function TabCadastroPai({ patient, onUpdate }) {
         allergies:  editAllergies.length ? editAllergies : null,
         notes:      Object.keys(base).length ? JSON.stringify(base) : null,
       }).eq('id', patient.id)
-
       if (error) throw error
+
+      /* Dados antropométricos de nascimento → growth_records */
+      const hasBirth = form.birth_weight || form.birth_height || form.birth_head_circ
+      if (hasBirth && patient.birthdate) {
+        const payload = {
+          patient_id:            patient.id,
+          recorded_at:           patient.birthdate,
+          weight_kg:             form.birth_weight    ? parseFloat(form.birth_weight)    : null,
+          height_cm:             form.birth_height    ? parseFloat(form.birth_height)    : null,
+          head_circumference_cm: form.birth_head_circ ? parseFloat(form.birth_head_circ) : null,
+          notes:                 'Dados de nascimento',
+        }
+        if (nascimento?.id) {
+          await supabase.from('growth_records').update(payload).eq('id', nascimento.id)
+        } else {
+          await supabase.from('growth_records').insert(payload)
+        }
+        await loadNascimento()
+      }
+
       setEditing(false)
       onUpdate()   // re-fetcha o paciente no AuthContext
     } catch (err) {
@@ -1099,6 +1140,25 @@ function TabCadastroPai({ patient, onUpdate }) {
           value={patient.blood_type
             ? <span className="bg-red-50 text-red-700 font-semibold px-2 py-0.5 rounded text-xs">{patient.blood_type}</span>
             : null} />
+      </div>
+
+      {/* Dados de nascimento */}
+      <div className="card p-5">
+        <h3 className="font-semibold text-slate-700 text-sm mb-3">Dados Antropométricos de Nascimento</h3>
+        {nascimento ? (
+          <>
+            <Row label="Peso"
+              value={nascimento.weight_kg != null ? `${nascimento.weight_kg.toFixed(3)} kg` : null} />
+            <Row label="Estatura"
+              value={nascimento.height_cm != null ? `${nascimento.height_cm.toFixed(1)} cm` : null} />
+            <Row label="Perímetro cefálico"
+              value={nascimento.head_circumference_cm != null ? `${nascimento.head_circumference_cm.toFixed(1)} cm` : null} />
+          </>
+        ) : (
+          <p className="text-sm text-slate-400 italic">
+            Não registrados — clique em <strong>Completar cadastro</strong> para adicionar
+          </p>
+        )}
       </div>
 
       {/* Alergias */}
@@ -1189,6 +1249,34 @@ function TabCadastroPai({ patient, onUpdate }) {
                 </button>
               )
             )}
+          </div>
+        </div>
+
+        {/* Dados de nascimento */}
+        <div className="space-y-2 pt-2 border-t border-slate-100">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Dados de Nascimento</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="label">Peso (kg)</label>
+              <input type="number" step="0.001" min="0.3" max="8" className="input"
+                placeholder="ex: 3.250"
+                value={form.birth_weight}
+                onChange={e => setForm(f => ({ ...f, birth_weight: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Estatura (cm)</label>
+              <input type="number" step="0.1" min="20" max="70" className="input"
+                placeholder="ex: 49.5"
+                value={form.birth_height}
+                onChange={e => setForm(f => ({ ...f, birth_height: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">PC (cm)</label>
+              <input type="number" step="0.1" min="20" max="45" className="input"
+                placeholder="ex: 34.0"
+                value={form.birth_head_circ}
+                onChange={e => setForm(f => ({ ...f, birth_head_circ: e.target.value }))} />
+            </div>
           </div>
         </div>
 
