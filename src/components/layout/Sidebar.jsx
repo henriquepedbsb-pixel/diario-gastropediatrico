@@ -100,24 +100,43 @@ export default function Sidebar({ onClose }) {
         )}
 
         {!isMedico && (
-          <NavLink to="/diario" end onClick={onClose}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
-              }`
-            }>
-            <Home size={18} /> Diário do Meu Filho
-          </NavLink>
+          <>
+            {/* Link principal */}
+            <NavLink to="/diario" end onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+                }`
+              }>
+              <Home size={18} /> Diário do Meu Filho
+            </NavLink>
+
+            {/* Sub-itens — aparecem diretamente abaixo quando está no diário */}
+            {isDiario && PARENT_TABS.map(tab => {
+              const Icon     = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button key={tab.id} onClick={() => goTab(tab.id)}
+                  className={`w-full flex items-center gap-3 pl-9 pr-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'text-blue-700 bg-blue-50'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                  }`}>
+                  <Icon size={16} /> {tab.label}
+                </button>
+              )
+            })}
+          </>
         )}
 
-        {/* ── Seções contextuais (aparecem dentro de um paciente ou no diário) ── */}
-        {contextTabs && (
+        {/* ── Seções do médico (aparece dentro de um paciente) ── */}
+        {patientId && (
           <>
             <div className="pt-3 pb-1">
               <div className="h-px bg-slate-100 mb-3" />
-              <p className="section-header px-2">Seções</p>
+              <p className="section-header px-2">Seções do Paciente</p>
             </div>
-            {contextTabs.map(tab => {
+            {DOCTOR_TABS.map(tab => {
               const Icon     = tab.icon
               const isActive = activeTab === tab.id
               return (
