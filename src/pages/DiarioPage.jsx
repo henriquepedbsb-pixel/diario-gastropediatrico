@@ -9,6 +9,17 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 /* ─── helpers ─── */
+
+/* Extrai o storage path de file_url (aceita path puro ou URL legada) */
+function extractStoragePath(fileUrl) {
+  if (!fileUrl) return null
+  if (fileUrl.startsWith('http')) {
+    const match = fileUrl.match(/\/prescricoes\/(.+)/)
+    return match ? match[1] : null
+  }
+  return fileUrl
+}
+
 function calcIdade(birthdate) {
   if (!birthdate) return '—'
   const birth  = parseISO(birthdate)
@@ -303,7 +314,19 @@ function TabReceitas({ patient }) {
       .eq('patient_id', patient.id)
       .eq('is_active', true)
       .order('prescribed_at', { ascending: false })
-      .then(({ data }) => { setReceitas(data ?? []); setLoading(false) })
+      .then(({ data }) => {
+        const rows = (data ?? []).map(r => {
+          if (!r.file_url) return r
+          const storagePath = extractStoragePath(r.file_url)
+          if (!storagePath) return r
+          const { data: urlData } = supabase.storage
+            .from('prescricoes')
+            .getPublicUrl(storagePath)
+          return { ...r, _publicUrl: urlData.publicUrl }
+        })
+        setReceitas(rows)
+        setLoading(false)
+      })
   }, [patient.id])
 
   return (
@@ -339,8 +362,8 @@ function TabReceitas({ patient }) {
                   <span>⏱ Válida até {format(parseISO(r.expires_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
                 )}
               </div>
-              {r.file_url && (
-                <a href={r.file_url} target="_blank" rel="noopener noreferrer"
+              {r._publicUrl && (
+                <a href={r._publicUrl} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline">
                   <Paperclip size={12} />
                   {r.file_type === 'pdf' ? 'Abrir PDF' : 'Ver imagem'}
