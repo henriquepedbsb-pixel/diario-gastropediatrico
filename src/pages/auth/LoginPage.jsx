@@ -38,11 +38,24 @@ export default function LoginPage() {
 
           {/* Topo colorido */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-8 text-white text-center">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <Stethoscope size={30} />
+            {/* Foto do médico */}
+            <div className="relative w-24 h-24 mx-auto mb-4">
+              <img
+                src="/medico.jpg"
+                alt="Dr. Henrique Gomes"
+                className="w-24 h-24 rounded-full object-cover object-top border-4 border-white/40 shadow-lg"
+                onError={e => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
+              {/* Fallback: ícone caso a foto não carregue */}
+              <div className="w-24 h-24 bg-white/20 rounded-full items-center justify-center hidden absolute inset-0">
+                <Stethoscope size={36} />
+              </div>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">Diário Gastropediátrico</h1>
-            <p className="text-blue-200 text-sm mt-1">Dr. Henrique Gomes</p>
+            <h1 className="text-xl font-bold tracking-tight">Dr. Henrique Gomes</h1>
+            <p className="text-blue-200 text-sm mt-0.5">Gastropediatria · Diário Clínico</p>
           </div>
 
           {/* Formulário */}
