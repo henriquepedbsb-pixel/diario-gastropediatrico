@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale'
 import {
   UtensilsCrossed, FileText, Lightbulb, Droplets,
   Plus, Trash2, Loader2, Baby, X, Upload, Paperclip,
-  Milestone, Syringe,
+  Milestone, Syringe, Clock, Send, CheckCircle, XCircle,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -763,6 +763,218 @@ function TabFezes({ patient }) {
 }
 
 /* ═══════════════════════════════════════════
+   SEM PACIENTE — solicitação de cadastro
+═══════════════════════════════════════════ */
+function SemPacienteScreen({ profile }) {
+  const { session } = useAuth()
+  const [status,  setStatus]  = useState(null)   // null=carregando | 'none' | 'pending' | 'approved' | 'rejected'
+  const [reqData, setReqData] = useState(null)
+  const [form,    setForm]    = useState({ child_name: '', child_birthdate: '', child_gender: '', notes: '' })
+  const [sending, setSending] = useState(false)
+  const [erro,    setErro]    = useState('')
+
+  const loadRequest = async () => {
+    const { data } = await supabase
+      .from('patient_requests')
+      .select('*')
+      .eq('parent_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    setReqData(data)
+    setStatus(data ? data.status : 'none')
+  }
+
+  useEffect(() => { loadRequest() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submit = async () => {
+    if (!form.child_name.trim()) { setErro('Informe o nome da criança.'); return }
+    setSending(true); setErro('')
+    const { error } = await supabase.from('patient_requests').insert({
+      parent_id:       session.user.id,
+      parent_name:     profile?.full_name  || null,
+      parent_email:    session.user.email,
+      child_name:      form.child_name.trim(),
+      child_birthdate: form.child_birthdate || null,
+      child_gender:    form.child_gender    || null,
+      notes:           form.notes.trim()    || null,
+    })
+    setSending(false)
+    if (error) { setErro(error.message); return }
+    await loadRequest()
+  }
+
+  /* ── Carregando ── */
+  if (status === null) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 size={28} className="text-blue-400 animate-spin" />
+      </div>
+    )
+  }
+
+  /* ── Aguardando aprovação ── */
+  if (status === 'pending') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-5 p-8 text-center">
+        <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center">
+          <Clock size={36} className="text-amber-400" />
+        </div>
+        <div>
+          <p className="font-bold text-slate-800 text-lg">Solicitação enviada!</p>
+          <p className="text-sm text-slate-500 mt-1 max-w-xs leading-relaxed">
+            Aguardando aprovação do Dr. Henrique Gomes para o paciente{' '}
+            <strong>{reqData?.child_name}</strong>.
+          </p>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-sm text-amber-800 max-w-xs text-left space-y-1">
+          <p className="font-semibold">📋 Próximos passos</p>
+          <p className="leading-relaxed">
+            Assim que o médico aprovar, clique em <strong>Verificar aprovação</strong> ou recarregue
+            a página para acessar o diário do seu filho.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
+        >
+          🔄 Verificar aprovação
+        </button>
+      </div>
+    )
+  }
+
+  /* ── Aprovado (paciente ainda não carregado na sessão) ── */
+  if (status === 'approved') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-5 p-8 text-center">
+        <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center">
+          <CheckCircle size={36} className="text-green-500" />
+        </div>
+        <div>
+          <p className="font-bold text-slate-800 text-lg">Solicitação aprovada!</p>
+          <p className="text-sm text-slate-500 mt-1 max-w-xs leading-relaxed">
+            O Dr. Henrique aprovou o cadastro de <strong>{reqData?.child_name}</strong>.
+            Recarregue a página para acessar o diário.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
+        >
+          🔄 Abrir diário
+        </button>
+      </div>
+    )
+  }
+
+  /* ── Rejeitado ── */
+  if (status === 'rejected') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-5 p-8 text-center">
+        <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center">
+          <XCircle size={36} className="text-red-400" />
+        </div>
+        <div>
+          <p className="font-bold text-slate-800 text-lg">Solicitação não aprovada</p>
+          <p className="text-sm text-slate-500 mt-1 max-w-xs">
+            Entre em contato com o consultório para mais informações.
+          </p>
+        </div>
+        <a
+          href="mailto:henriquepedbsb@gmail.com"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
+        >
+          ✉️ Contatar o médico
+        </a>
+      </div>
+    )
+  }
+
+  /* ── Formulário de solicitação (status === 'none') ── */
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[70vh] p-6">
+      <div className="w-full max-w-sm">
+
+        {/* Cabeçalho */}
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <Baby size={36} className="text-blue-400" />
+          </div>
+          <p className="font-bold text-slate-800 text-xl">Solicitar cadastro</p>
+          <p className="text-sm text-slate-500 mt-1 leading-relaxed max-w-xs mx-auto">
+            Preencha os dados do seu filho. O Dr. Henrique Gomes receberá uma notificação para aprovar.
+          </p>
+        </div>
+
+        {/* Formulário */}
+        <div className="card p-6 space-y-4">
+          <div>
+            <label className="label">Nome da criança *</label>
+            <input
+              className="input"
+              placeholder="Nome completo"
+              value={form.child_name}
+              onChange={e => setForm(f => ({ ...f, child_name: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Data de nascimento</label>
+              <input
+                type="date"
+                className="input"
+                max={new Date().toISOString().split('T')[0]}
+                value={form.child_birthdate}
+                onChange={e => setForm(f => ({ ...f, child_birthdate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="label">Gênero</label>
+              <select
+                className="input"
+                value={form.child_gender}
+                onChange={e => setForm(f => ({ ...f, child_gender: e.target.value }))}
+              >
+                <option value="">—</option>
+                <option value="M">Masculino</option>
+                <option value="F">Feminino</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="label">Observações</label>
+            <textarea
+              className="input resize-none"
+              rows={3}
+              placeholder="Alergias, condições relevantes…"
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+            />
+          </div>
+
+          {erro && (
+            <p className="text-xs text-red-500 flex items-center gap-1">⚠️ {erro}</p>
+          )}
+
+          <button
+            onClick={submit}
+            disabled={sending || !form.child_name.trim()}
+            className="btn-primary w-full"
+          >
+            {sending
+              ? <><Loader2 size={16} className="animate-spin" /> Enviando…</>
+              : <><Send size={15} /> Solicitar cadastro</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
    PÁGINA PRINCIPAL
 ═══════════════════════════════════════════ */
 const TABS = [
@@ -778,31 +990,9 @@ export default function DiarioPage() {
   const { paciente, profile } = useAuth()
   const [tab, setTab] = useState('refeicoes')
 
-  /* Paciente não vinculado */
+  /* Paciente não vinculado — formulário de solicitação */
   if (!paciente) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4 p-8 text-center">
-        <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center">
-          <Baby size={36} className="text-blue-300" />
-        </div>
-        <div>
-          <p className="font-semibold text-slate-700 text-base">Nenhum paciente vinculado</p>
-          <p className="text-sm text-slate-500 mt-1 max-w-xs">
-            Seu perfil ainda não está associado a nenhum paciente.
-            Solicite ao Dr. Henrique Gomes que cadastre o seu filho informando o e-mail da sua conta.
-          </p>
-        </div>
-        <a
-          href="mailto:henriquepedbsb@gmail.com?subject=Solicitar%20vínculo%20de%20paciente&body=Olá%20Dr.%20Henrique%2C%20gostaria%20de%20vincular%20meu%20perfil%20ao%20paciente."
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
-        >
-          ✉️ Solicitar acesso ao médico
-        </a>
-        <p className="text-xs text-slate-400">
-          Após o vínculo ser feito, basta sair e entrar novamente na conta.
-        </p>
-      </div>
-    )
+    return <SemPacienteScreen profile={profile} />
   }
 
   /* Avatar */

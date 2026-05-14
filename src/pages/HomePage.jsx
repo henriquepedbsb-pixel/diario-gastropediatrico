@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Search, UserPlus, Baby, Users,
   FileText, Lightbulb, TrendingUp,
-  ChevronRight, Activity, Clock,
+  ChevronRight, Activity, Clock, Bell, CheckCircle, XCircle, Loader2,
 } from 'lucide-react'
 import { differenceInMonths, differenceInYears, parseISO, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -117,6 +117,8 @@ export default function HomePage() {
   const [prescCount,   setPrescCount]   = useState(null)
   const [tipsCount,    setTipsCount]    = useState(null)
   const [recentTips,   setRecentTips]   = useState([])
+  const [pendingReqs,  setPendingReqs]  = useState([])
+  const [approvingId,  setApprovingId]  = useState(null)
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState('')
 
@@ -127,6 +129,7 @@ export default function HomePage() {
         { count: presc },
         { count: tips },
         { data: latestTips },
+        { data: reqs },
       ] = await Promise.all([
         supabase.from('patients').select('id, name, birthdate, gender, blood_type, allergies').order('name'),
         supabase.from('prescriptions').select('id', { count: 'exact', head: true }).eq('is_active', true),
@@ -136,12 +139,17 @@ export default function HomePage() {
           .eq('is_published', true)
           .order('published_at', { ascending: false })
           .limit(3),
+        supabase.from('patient_requests')
+          .select('*')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false }),
       ])
 
       setPatients(pats ?? [])
       setPrescCount(presc ?? 0)
       setTipsCount(tips ?? 0)
       setRecentTips(latestTips ?? [])
+      setPendingReqs(reqs ?? [])
       setLoading(false)
     }
 
@@ -151,6 +159,51 @@ export default function HomePage() {
   const filtered = patients.filter(p =>
     p.name?.toLowerCase().includes(search.toLowerCase())
   )
+
+  /* ── Aprovar solicitação de cadastro ── */
+  const approveRequest = async (req) => {
+    setApprovingId(req.id)
+    try {
+      // 1. Cria o paciente vinculado ao responsável
+      const { data: patient, error: patErr } = await supabase
+        .from('patients')
+        .insert({
+          name:        req.child_name,
+          birthdate:   req.child_birthdate  || null,
+          gender:      req.child_gender     || null,
+          notes:       req.notes            || null,
+          parent_id:   req.parent_id,
+          parent_email: null,
+        })
+        .select()
+        .single()
+      if (patErr) throw patErr
+
+      // 2. Marca solicitação como aprovada
+      await supabase
+        .from('patient_requests')
+        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+        .eq('id', req.id)
+
+      // 3. Atualiza estado local
+      setPendingReqs(prev => prev.filter(r => r.id !== req.id))
+      setPatients(prev => [...prev, patient].sort((a, b) => a.name.localeCompare(b.name)))
+    } catch (err) {
+      console.error('Erro ao aprovar solicitação:', err)
+      alert('Erro ao aprovar: ' + (err.message ?? err))
+    } finally {
+      setApprovingId(null)
+    }
+  }
+
+  /* ── Rejeitar solicitação ── */
+  const rejectRequest = async (req) => {
+    await supabase
+      .from('patient_requests')
+      .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+      .eq('id', req.id)
+    setPendingReqs(prev => prev.filter(r => r.id !== req.id))
+  }
 
   /* ── Dicas: metadados de categoria ── */
   const CAT = {
@@ -179,6 +232,71 @@ export default function HomePage() {
           <UserPlus size={16} /> Novo Paciente
         </button>
       </div>
+
+      {/* ── Solicitações de cadastro pendentes ── */}
+      {!loading && pendingReqs.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+              <Bell size={15} className="text-amber-600" />
+            </div>
+            <h2 className="section-header text-amber-700 flex items-center gap-2">
+              Solicitações de cadastro
+              <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {pendingReqs.length}
+              </span>
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {pendingReqs.map(req => (
+              <div key={req.id} className="card p-4 border-l-4 border-amber-400 bg-amber-50/30">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-800">{req.child_name}</p>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {req.child_birthdate
+                        ? `Nasc.: ${format(new Date(req.child_birthdate + 'T12:00:00'), 'dd/MM/yyyy')} · `
+                        : ''}
+                      {req.child_gender === 'M' ? 'Masculino' : req.child_gender === 'F' ? 'Feminino' : 'Gênero não informado'}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Responsável: <span className="font-medium">{req.parent_name || req.parent_email || '—'}</span>
+                      {req.parent_email && req.parent_name ? ` · ${req.parent_email}` : ''}
+                      {' · '}
+                      {format(new Date(req.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                    </p>
+                    {req.notes && (
+                      <p className="text-xs text-slate-500 mt-1.5 italic bg-white border border-slate-100 rounded-lg px-2.5 py-1.5">
+                        "{req.notes}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                    <button
+                      onClick={() => rejectRequest(req)}
+                      disabled={approvingId === req.id}
+                      className="inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors"
+                    >
+                      <XCircle size={13} /> Recusar
+                    </button>
+                    <button
+                      onClick={() => approveRequest(req)}
+                      disabled={approvingId === req.id}
+                      className="inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    >
+                      {approvingId === req.id
+                        ? <><Loader2 size={12} className="animate-spin" /> Aprovando…</>
+                        : <><CheckCircle size={13} /> Aprovar</>}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
