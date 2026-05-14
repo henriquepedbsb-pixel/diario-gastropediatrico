@@ -1,10 +1,14 @@
-/* ── Helpers de verificação de role ── */
+/* ── Helpers de verificação de role ──
+   Banco armazena: 'doctor' | 'parent'
+   App usa internamente: 'medico' | 'pai'
+   Ambos são aceitos em qualquer verificação.
+── */
 
-const ROLES_MEDICO = ['medico', 'médico', 'doctor', 'Doutor', 'doutor']
-const ROLES_PAI    = ['pai', 'mae', 'mãe', 'parent', 'responsavel', 'responsável', 'guardian']
+const ROLES_MEDICO = ['doctor', 'medico', 'médico', 'Doutor', 'doutor']
+const ROLES_PAI    = ['parent', 'pai', 'mae', 'mãe', 'responsavel', 'responsável', 'guardian']
 
-export const isDoctor = (role) => ROLES_MEDICO.includes(role)
-export const isPai    = (role) => ROLES_PAI.includes(role)
+export const isDoctor = (role) => !!role && ROLES_MEDICO.includes(role.trim())
+export const isPai    = (role) => !!role && ROLES_PAI.includes(role.trim())
 
 /* Normaliza qualquer variação para 'medico' | 'pai' | null */
 export const normalizeRole = (role) => {

@@ -23,18 +23,22 @@ export function AuthProvider({ children }) {
 
       console.log('[Auth] perfil bruto:', prof)
 
-      // Perfil não existe → cria automaticamente como responsável
+      // Perfil não existe → cria automaticamente
       if (!prof) {
         console.log('[Auth] perfil não encontrado, criando automaticamente...')
+        const { data: { user } } = await supabase.auth.getUser()
+        const roleNovo = user?.user_metadata?.role === 'doctor' ? 'doctor' : 'parent'
         const { data: novo, error: insErr } = await supabase
           .from('profiles')
-          .insert({ id: userId, full_name: userEmail ?? userId, role: 'pai' })
+          .insert({
+            id:        userId,
+            full_name: user?.user_metadata?.full_name || userEmail || userId,
+            role:      roleNovo,
+          })
           .select()
-          .single()
-        if (insErr) {
-          console.error('[Auth] erro ao criar perfil:', insErr.message)
-          return
-        }
+          .maybeSingle()
+        console.log('[Auth] novo perfil:', novo, '| erro:', insErr)
+        if (insErr || !novo) return
         prof = novo
       }
 
@@ -147,12 +151,12 @@ export function AuthProvider({ children }) {
       const uid = data.user.id
       const { error: pe } = await supabase
         .from('profiles')
-        .insert({ id: uid, role: 'medico', full_name })
+        .insert({ id: uid, role: 'doctor', full_name })
       if (pe) throw pe
 
       perfilCarregado.current = uid
       setSession(data.session)
-      setProfile({ id: uid, role: 'medico', full_name })
+      setProfile({ id: uid, role: 'medico', full_name })   // interno: 'medico'
       setLoading(false)
       return data
     } finally {
@@ -172,7 +176,7 @@ export function AuthProvider({ children }) {
 
       const { error: pe } = await supabase
         .from('profiles')
-        .insert({ id: uid, role: 'pai', full_name })
+        .insert({ id: uid, role: 'parent', full_name })
       if (pe) throw pe
 
       // Verifica vínculo pendente — isolado para não bloquear o cadastro se falhar
@@ -208,7 +212,7 @@ export function AuthProvider({ children }) {
       // Atualiza todo o estado de uma vez e libera o loading
       perfilCarregado.current = uid   // sinaliza que o próximo evento de auth pode ser ignorado
       setSession(data.session)
-      setProfile({ id: uid, role: 'pai', full_name })
+      setProfile({ id: uid, role: 'pai', full_name })    // interno: 'pai'
       setPaciente(pac)
       setLoading(false)
       return data
