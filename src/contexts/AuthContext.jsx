@@ -26,11 +26,11 @@ export function AuthProvider({ children }) {
     try {
       const { data: prof, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, role, phone, avatar_url')
         .eq('id', userId)
-        .maybeSingle()
+        .single()
 
-      console.log('[Auth] perfil bruto:', prof, '| erro:', error)
+      console.log('[Auth] perfil completo:', prof, '| erro:', error)
 
       if (error || !prof) return
 
