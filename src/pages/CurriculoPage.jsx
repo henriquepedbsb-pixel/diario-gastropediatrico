@@ -1,4 +1,16 @@
-import { GraduationCap, Award, Building2, Stethoscope, Star, Heart } from 'lucide-react'
+import { GraduationCap, Award, Building2, Stethoscope, Star, Heart, CalendarDays, ExternalLink } from 'lucide-react'
+
+/* Ícone Instagram inline (lucide não inclui redes sociais) */
+function IconInstagram({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <circle cx="12" cy="12" r="4"/>
+      <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+    </svg>
+  )
+}
 
 const FORMACAO = [
   {
@@ -67,6 +79,29 @@ export default function CurriculoPage() {
             Atendimento em pediatria e gastropediatria individualizado para cada paciente.
             Experiência em bebês prematuros. Prevenção é sempre o melhor remédio.
           </p>
+          {/* Links */}
+          <div className="flex flex-col gap-2 mt-4">
+            <a
+              href="https://www.doctoralia.com.br/adicionar-opiniao/henrique-gomes-3#/opiniao"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium"
+            >
+              <CalendarDays size={15} />
+              Agendar consulta — Doctoralia
+              <ExternalLink size={12} className="ml-auto opacity-60" />
+            </a>
+            <a
+              href="https://www.instagram.com/meumedicopediatra/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-pink-50 text-pink-600 hover:bg-pink-100 transition-colors text-sm font-medium"
+            >
+              <IconInstagram size={15} />
+              @meumedicopediatra
+              <ExternalLink size={12} className="ml-auto opacity-60" />
+            </a>
+          </div>
         </div>
       </div>
 
