@@ -88,7 +88,7 @@ export default function CurriculoPage() {
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium"
             >
               <CalendarDays size={15} />
-              Agendar consulta — Doctoralia
+              Deixar avaliação — Doctoralia
               <ExternalLink size={12} className="ml-auto opacity-60" />
             </a>
             <a
