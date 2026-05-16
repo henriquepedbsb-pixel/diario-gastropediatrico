@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Star, Plus, Trash2, Eye, EyeOff, MessageSquareQuote } from 'lucide-react'
+import { Star, Plus, Trash2, Eye, EyeOff, MessageSquareQuote, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 function StarRating({ value, onChange }) {
@@ -71,6 +71,33 @@ export default function DepoimentosPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-5">
+
+      {/* Avaliações Doctoralia */}
+      <div className="card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2">
+          <MessageSquareQuote size={16} className="text-yellow-500" />
+          <h2 className="font-semibold text-slate-700 text-sm">Avaliações na Doctoralia</h2>
+        </div>
+        <div className="p-4">
+          <img
+            src="/depoimentos.png"
+            alt="Avaliações na Doctoralia"
+            className="w-full rounded-lg border border-slate-100 shadow-sm"
+          />
+        </div>
+        <div className="px-5 pb-5">
+          <a
+            href="https://www.doctoralia.com.br/adicionar-opiniao/henrique-gomes-3#/opiniao"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium border border-teal-100"
+          >
+            <Star size={14} className="fill-teal-500 text-teal-500" />
+            Link para nova avaliação na Doctoralia
+            <ExternalLink size={13} className="opacity-60" />
+          </a>
+        </div>
+      </div>
 
       {/* Cabeçalho */}
       <div className="flex items-center justify-between">
