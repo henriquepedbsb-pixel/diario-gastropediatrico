@@ -205,13 +205,44 @@ export default function CurriculoPage() {
         </div>
       </div>
 
-      {/* Depoimentos */}
+      {/* Depoimentos Doctoralia */}
+      <div className="card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2">
+          <MessageSquareQuote size={16} className="text-yellow-500" />
+          <h2 className="font-semibold text-slate-700 text-sm">O que dizem os pacientes</h2>
+          <span className="ml-auto text-xs text-slate-400">via Doctoralia</span>
+        </div>
+
+        {/* Print das avaliações */}
+        <div className="p-4">
+          <img
+            src="/depoimentos.png"
+            alt="Avaliações na Doctoralia"
+            className="w-full rounded-lg border border-slate-100 shadow-sm"
+          />
+        </div>
+
+        {/* Link para avaliar */}
+        <div className="px-5 pb-5">
+          <a
+            href="https://www.doctoralia.com.br/adicionar-opiniao/henrique-gomes-3#/opiniao"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium border border-teal-100"
+          >
+            <Star size={14} className="fill-teal-500 text-teal-500" />
+            Deixe sua avaliação na Doctoralia
+            <ExternalLink size={13} className="opacity-60" />
+          </a>
+        </div>
+      </div>
+
+      {/* Depoimentos manuais (se houver) */}
       {depoimentos.length > 0 && (
         <div className="card overflow-hidden">
           <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2">
             <MessageSquareQuote size={16} className="text-yellow-500" />
-            <h2 className="font-semibold text-slate-700 text-sm">O que dizem os pacientes</h2>
-            <span className="ml-auto text-xs text-slate-400">via Doctoralia</span>
+            <h2 className="font-semibold text-slate-700 text-sm">Destaques</h2>
           </div>
           <div className="divide-y divide-slate-100">
             {depoimentos.map(dep => (
