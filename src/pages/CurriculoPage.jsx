@@ -34,6 +34,13 @@ const FORMACAO = [
     local: 'Instituto Israelita Albert Einstein',
     ano: '2018',
   },
+  {
+    icon: Award,
+    color: 'bg-purple-100 text-purple-700',
+    titulo: 'Pós-graduação em Nutrologia Pediátrica',
+    local: 'FG',
+    ano: '2023',
+  },
 ]
 
 const ATUACAO = [
