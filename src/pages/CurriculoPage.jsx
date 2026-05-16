@@ -55,6 +55,7 @@ const ATUACAO = [
     color: 'bg-pink-100 text-pink-700',
     titulo: 'UCIN Canguru — Hospital Materno Infantil de Brasília',
     descricao: 'Unidade de Cuidados Intermediários Neonatais, atendimento a recém-nascidos prematuros e de alto risco.',
+    ano: 'Desde 2022',
   },
   {
     icon: Building2,
@@ -156,6 +157,11 @@ export default function CurriculoPage() {
                 <div>
                   <p className="text-sm font-medium text-slate-800 leading-snug">{item.titulo}</p>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">{item.descricao}</p>
+                  {item.ano && (
+                    <span className="inline-block mt-1.5 text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                      {item.ano}
+                    </span>
+                  )}
                 </div>
               </div>
             )
