@@ -1039,11 +1039,11 @@ function TabCadastroPai({ patient, onUpdate }) {
       const ext  = file.name.split('.').pop().toLowerCase()
       const path = `${patient.id}/photo.${ext}`
       const { error: upErr } = await supabase.storage
-        .from('patient-photos')
+        .from('Fotos de pacientes')
         .upload(path, file, { upsert: true })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage
-        .from('patient-photos')
+        .from('Fotos de pacientes')
         .getPublicUrl(path)
       await supabase.from('patients').update({ photo_url: publicUrl }).eq('id', patient.id)
       onUpdate()
