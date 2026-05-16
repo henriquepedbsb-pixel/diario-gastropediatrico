@@ -1082,11 +1082,11 @@ function TabCadastro({ patient, onUpdate }) {
       const ext  = file.name.split('.').pop().toLowerCase()
       const path = `${patient.id}/photo.${ext}`
       const { error: upErr } = await supabase.storage
-        .from('Fotos de pacientes')
+        .from('patient-photos')
         .upload(path, file, { upsert: true })
       if (upErr) throw new Error(`Storage: ${upErr.message}`)
       const { data: { publicUrl } } = supabase.storage
-        .from('Fotos de pacientes')
+        .from('patient-photos')
         .getPublicUrl(path)
       const { error: dbErr } = await supabase
         .from('patients')
