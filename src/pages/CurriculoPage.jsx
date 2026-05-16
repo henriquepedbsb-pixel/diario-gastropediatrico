@@ -1,4 +1,6 @@
-import { GraduationCap, Award, Building2, Stethoscope, Star, Heart, CalendarDays, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { GraduationCap, Award, Building2, Stethoscope, Star, Heart, CalendarDays, ExternalLink, MessageSquareQuote } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 /* Ícone Instagram inline (lucide não inclui redes sociais) */
 function IconInstagram({ size = 16 }) {
@@ -66,6 +68,17 @@ const ATUACAO = [
 ]
 
 export default function CurriculoPage() {
+  const [depoimentos, setDepoimentos] = useState([])
+
+  useEffect(() => {
+    supabase
+      .from('depoimentos')
+      .select('*')
+      .eq('visivel', true)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setDepoimentos(data ?? []))
+  }, [])
+
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
 
@@ -191,6 +204,38 @@ export default function CurriculoPage() {
           ))}
         </div>
       </div>
+
+      {/* Depoimentos */}
+      {depoimentos.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2">
+            <MessageSquareQuote size={16} className="text-yellow-500" />
+            <h2 className="font-semibold text-slate-700 text-sm">O que dizem os pacientes</h2>
+            <span className="ml-auto text-xs text-slate-400">via Doctoralia</span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {depoimentos.map(dep => (
+              <div key={dep.id} className="px-5 py-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-sm font-semibold text-slate-800">{dep.autor}</span>
+                  {dep.data_avaliacao && (
+                    <span className="text-xs text-slate-400">
+                      {new Date(dep.data_avaliacao).toLocaleDateString('pt-BR')}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-0.5 mt-1">
+                  {[1,2,3,4,5].map(n => (
+                    <Star key={n} size={13}
+                      className={n <= dep.nota ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'} />
+                  ))}
+                </div>
+                <p className="text-sm text-slate-600 mt-2 leading-relaxed">{dep.texto}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   )

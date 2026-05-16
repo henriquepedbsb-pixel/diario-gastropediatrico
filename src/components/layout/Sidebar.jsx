@@ -1,7 +1,7 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb,
          ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
-         Milestone, Syringe, BookUser } from 'lucide-react'
+         Milestone, Syringe, BookUser, MessageSquareQuote } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
 
@@ -102,6 +102,15 @@ export default function Sidebar({ onClose }) {
                 }`
               }>
               <Lightbulb size={18} /> Dicas &amp; Orientações
+            </NavLink>
+
+            <NavLink to="/dashboard/depoimentos" onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+                }`
+              }>
+              <MessageSquareQuote size={18} /> Depoimentos
             </NavLink>
           </>
         )}

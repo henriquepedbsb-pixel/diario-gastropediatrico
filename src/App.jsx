@@ -11,6 +11,7 @@ import PacienteDetailPage from './pages/PacienteDetailPage'
 import DiarioPage from './pages/DiarioPage'
 import DicasPage from './pages/DicasPage'
 import CurriculoPage from './pages/CurriculoPage'
+import DepoimentosPage from './pages/DepoimentosPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
@@ -77,7 +78,8 @@ export default function App() {
             <Route path="/dashboard"                    element={<HomePage />} />
             <Route path="/dashboard/pacientes/novo"     element={<NovoPacientePage />} />
             <Route path="/dashboard/pacientes/:id"      element={<PacienteDetailPage />} />
-            <Route path="/dashboard/dicas"             element={<DicasPage />} />
+            <Route path="/dashboard/dicas"        element={<DicasPage />} />
+            <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />} />
           </Route>
 
           {/* Médico */}
