@@ -103,13 +103,13 @@ export default function CurriculoPage() {
           {/* Links */}
           <div className="flex flex-col gap-2 mt-4">
             <a
-              href="https://www.doctoralia.com.br/adicionar-opiniao/henrique-gomes-3#/opiniao"
+              href="https://www.doctoralia.com.br/henrique-gomes-3/gastroenterologista-pediatrico-pediatra/brasilia#address-id=1073907&is-online-only=false&filters%5Bspecializations%5D%5B%5D=71"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium"
             >
               <CalendarDays size={15} />
-              Deixar avaliação — Doctoralia
+              Agende uma consulta
               <ExternalLink size={12} className="ml-auto opacity-60" />
             </a>
             <a
