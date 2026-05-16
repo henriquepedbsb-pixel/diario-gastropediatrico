@@ -214,12 +214,11 @@ export default function CurriculoPage() {
         </div>
 
         {/* Print das avaliações */}
-        <div className="p-4">
-          <img
-            src="/depoimentos.png"
-            alt="Avaliações na Doctoralia"
-            className="w-full rounded-lg border border-slate-100 shadow-sm"
-          />
+        <div className="p-4 space-y-3">
+          {['/depoimentos.png', '/depoimentos2.png', '/depoimentos3.png'].map((src, i) => (
+            <img key={i} src={src} alt={`Avaliações na Doctoralia ${i + 1}`}
+              className="w-full rounded-lg border border-slate-100 shadow-sm" />
+          ))}
         </div>
 
         {/* Link para avaliar */}

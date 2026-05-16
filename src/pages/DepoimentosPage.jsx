@@ -78,12 +78,11 @@ export default function DepoimentosPage() {
           <MessageSquareQuote size={16} className="text-yellow-500" />
           <h2 className="font-semibold text-slate-700 text-sm">Avaliações na Doctoralia</h2>
         </div>
-        <div className="p-4">
-          <img
-            src="/depoimentos.png"
-            alt="Avaliações na Doctoralia"
-            className="w-full rounded-lg border border-slate-100 shadow-sm"
-          />
+        <div className="p-4 space-y-3">
+          {['/depoimentos.png', '/depoimentos2.png', '/depoimentos3.png'].map((src, i) => (
+            <img key={i} src={src} alt={`Avaliações na Doctoralia ${i + 1}`}
+              className="w-full rounded-lg border border-slate-100 shadow-sm" />
+          ))}
         </div>
         <div className="px-5 pb-5">
           <a
