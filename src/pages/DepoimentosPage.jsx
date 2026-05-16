@@ -70,7 +70,7 @@ export default function DepoimentosPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-5">
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
 
       {/* Avaliações Doctoralia */}
       <div className="card overflow-hidden">
@@ -78,10 +78,10 @@ export default function DepoimentosPage() {
           <MessageSquareQuote size={16} className="text-yellow-500" />
           <h2 className="font-semibold text-slate-700 text-sm">Avaliações na Doctoralia</h2>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-4">
           {['/depoimentos.png', '/depoimentos2.png', '/depoimentos3.png'].map((src, i) => (
             <img key={i} src={src} alt={`Avaliações na Doctoralia ${i + 1}`}
-              className="w-full rounded-lg border border-slate-100 shadow-sm" />
+              className="w-full rounded-xl border border-slate-100 shadow-md scale-[1.02] origin-top" />
           ))}
         </div>
         <div className="px-5 pb-5">
