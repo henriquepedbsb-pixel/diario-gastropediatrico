@@ -1072,24 +1072,31 @@ function TabCadastro({ patient, onUpdate }) {
 
   /* ── foto ── */
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoError,    setPhotoError]    = useState(null)
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     setUploadingPhoto(true)
+    setPhotoError(null)
     try {
       const ext  = file.name.split('.').pop().toLowerCase()
       const path = `${patient.id}/photo.${ext}`
       const { error: upErr } = await supabase.storage
         .from('patient-photos')
         .upload(path, file, { upsert: true })
-      if (upErr) throw upErr
+      if (upErr) throw new Error(`Storage: ${upErr.message}`)
       const { data: { publicUrl } } = supabase.storage
         .from('patient-photos')
         .getPublicUrl(path)
-      await supabase.from('patients').update({ photo_url: publicUrl }).eq('id', patient.id)
+      const { error: dbErr } = await supabase
+        .from('patients')
+        .update({ photo_url: publicUrl })
+        .eq('id', patient.id)
+      if (dbErr) throw new Error(`DB: ${dbErr.message}`)
       onUpdate()
     } catch (err) {
       console.error('Erro ao enviar foto:', err.message)
+      setPhotoError(err.message)
     } finally {
       setUploadingPhoto(false)
     }
@@ -1237,6 +1244,9 @@ function TabCadastro({ patient, onUpdate }) {
                     className="text-xs text-red-500 hover:text-red-700 text-left transition-colors">
                     Remover foto
                   </button>
+                )}
+                {photoError && (
+                  <p className="text-xs text-red-600 max-w-[200px] leading-snug">{photoError}</p>
                 )}
               </div>
             </div>
