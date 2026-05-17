@@ -22,6 +22,7 @@ import TabDocumentos         from '../components/paciente/TabDocumentos'
 import TabCalculadora        from '../components/paciente/TabCalculadora'
 import TabFAQ                from '../components/paciente/TabFAQ'
 import TabGraficoFezes       from '../components/paciente/TabGraficoFezes'
+import TabFraldas            from '../components/paciente/TabFraldas'
 import TabIntroducaoAlimentar from '../components/paciente/TabIntroducaoAlimentar'
 import TabMedicamentos       from '../components/paciente/TabMedicamentos'
 import TabChoro              from '../components/paciente/TabChoro'
@@ -1741,22 +1742,25 @@ function TabResumo({ patient, onNavigate }) {
 ═══════════════════════════════════════════ */
 function TabIntestinal({ patient }) {
   const [subTab, setSubTab] = useState('habito')
+  const SUBTABS = [
+    { id: 'habito',   label: '📋 Hábito'    },
+    { id: 'evolucao', label: '📊 Evolução'  },
+    { id: 'fraldas',  label: '🍼 Fraldas'   },
+  ]
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
-        <button onClick={() => setSubTab('habito')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
-            ${subTab === 'habito' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-          📋 Hábito Intestinal
-        </button>
-        <button onClick={() => setSubTab('evolucao')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
-            ${subTab === 'evolucao' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-          📊 Evolução Intestinal
-        </button>
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+        {SUBTABS.map(s => (
+          <button key={s.id} onClick={() => setSubTab(s.id)}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all
+              ${subTab === s.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            {s.label}
+          </button>
+        ))}
       </div>
       {subTab === 'habito'   && <TabFezes        patient={patient} />}
       {subTab === 'evolucao' && <TabGraficoFezes patient={patient} />}
+      {subTab === 'fraldas'  && <TabFraldas      patient={patient} />}
     </div>
   )
 }
