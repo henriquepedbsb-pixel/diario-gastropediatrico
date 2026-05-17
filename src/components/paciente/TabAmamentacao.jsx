@@ -74,7 +74,7 @@ export default function TabAmamentacao({ patient }) {
     })
     setSaving(false)
     if (error) { setSaveErro(error.message) }
-    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id) }
+    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id, 'Amamentação registrada') }
   }
 
   const del = async (id) => {

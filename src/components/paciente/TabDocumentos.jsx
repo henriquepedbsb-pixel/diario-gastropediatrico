@@ -79,7 +79,7 @@ export default function TabDocumentos({ patient }) {
     })
     setSaving(false)
     if (error) { setSaveErro(error.message) }
-    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id) }
+    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id, 'Documento adicionado') }
   }
 
   const del = async (doc) => {

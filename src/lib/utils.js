@@ -1,9 +1,12 @@
 import { supabase } from './supabase'
 
 /* Marca atividade do responsável no paciente (substitui trigger do banco) */
-export const markPatientActivity = (patientId) => {
+export const markPatientActivity = (patientId, label = 'Atividade registrada') => {
   supabase.from('patients')
-    .update({ last_activity_at: new Date().toISOString() })
+    .update({
+      last_activity_at:    new Date().toISOString(),
+      last_activity_label: label,
+    })
     .eq('id', patientId)
     .then(() => {}) // fire and forget
 }

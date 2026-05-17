@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Search, UserPlus, Baby, Users,
   FileText, Lightbulb, TrendingUp,
@@ -101,7 +101,7 @@ function PatientCard({ patient, onClick }) {
           </p>
           {hasNewActivity ? (
             <p className="text-xs text-orange-500 font-medium mt-0.5">
-              🔔 Nova atividade {activityAgo}
+              🔔 {patient.last_activity_label || 'Nova atividade'} · {activityAgo}
             </p>
           ) : (
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -132,6 +132,7 @@ function PatientCard({ patient, onClick }) {
 ═══════════════════════════════════════════ */
 export default function HomePage() {
   const navigate  = useNavigate()
+  const location  = useLocation()
   const { profile } = useAuth()
 
   const [patients,     setPatients]     = useState([])
@@ -183,7 +184,7 @@ export default function HomePage() {
     }
 
     fetchAll()
-  }, [])
+  }, [location.key])
 
   const filtered = patients.filter(p =>
     p.name?.toLowerCase().includes(search.toLowerCase())

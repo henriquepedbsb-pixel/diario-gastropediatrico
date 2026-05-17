@@ -161,7 +161,7 @@ function TabRefeicoes({ patient }) {
       setModal(false)
       resetForm()
       load()
-      markPatientActivity(patient.id)
+      markPatientActivity(patient.id, 'Refeição registrada')
     }
   }
 
@@ -589,7 +589,7 @@ function TabFezes({ patient }) {
     })
     setSaving(false)
     if (error) { setSaveErro(error.message) }
-    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id) }
+    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id, 'Fezes registradas') }
   }
 
   const del = async (id) => {

@@ -101,7 +101,7 @@ export default function TabSintomas({ patient }) {
     })
     setSaving(false)
     if (error) { setSaveErro(error.message) }
-    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id) }
+    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id, 'Sintoma registrado') }
   }
 
   const del = async (id) => {

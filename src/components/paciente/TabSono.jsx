@@ -77,7 +77,7 @@ export default function TabSono({ patient }) {
     })
     setSaving(false)
     if (error) { setSaveErro(error.message) }
-    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id) }
+    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id, 'Sono registrado') }
   }
 
   const del = async (id) => {
