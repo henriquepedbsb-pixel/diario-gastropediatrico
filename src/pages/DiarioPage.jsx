@@ -495,6 +495,68 @@ function TabDicas() {
         </ul>
       </div>
 
+      {/* Orientação sobre compressas */}
+      <div className="card overflow-hidden border-cyan-200">
+        <div className="px-4 py-3 bg-cyan-50 border-b border-cyan-200">
+          <h3 className="font-semibold text-cyan-800 text-sm">🧊 Quando usar compressa fria ou quente?</h3>
+          <p className="text-xs text-cyan-600 mt-0.5">Orientação geral — sempre siga a recomendação do seu médico.</p>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {[
+            {
+              situacao: '💉 Após vacinação',
+              tipo: 'fria',
+              instrucao: 'Aplique compressa fria (pano úmido gelado ou bolsa de gelo envolto em tecido) no local da injeção por 10–15 minutos. Reduz dor e inchaço local. Evite calor nas primeiras 24h.',
+            },
+            {
+              situacao: '🤕 Após trauma / pancada / hematoma',
+              tipo: 'fria-depois-quente',
+              instrucao: 'Primeiras 48h: compressa fria por 15–20 min, 3–4x ao dia — reduz inflamação e inchaço. Após 48–72h: compressa morna por 15–20 min — melhora circulação e acelera a reabsorção do hematoma.',
+            },
+            {
+              situacao: '🌡️ Febre',
+              tipo: 'fria',
+              instrucao: 'Pano úmido morno (não gelado) na testa, axilas e virilhas. Nunca use gelo diretamente na pele. O objetivo é aliviar o desconforto, não "baixar" mecanicamente a temperatura.',
+            },
+            {
+              situacao: '🦟 Picada de inseto / alergia local',
+              tipo: 'fria',
+              instrucao: 'Compressa fria por 10–15 minutos alivia coceira, ardor e inchaço. Evite coçar. Procure atendimento se aparecer inchaço progressivo, falta de ar ou reação generalizada.',
+            },
+            {
+              situacao: '😣 Cólica / dor abdominal leve',
+              tipo: 'quente',
+              instrucao: 'Compressa morna ou bolsa de água quente (temperatura suportável, nunca quente demais) sobre o abdômen por 15–20 minutos. Ajuda a relaxar a musculatura. Não use em dores intensas, febre ou abdômen rígido.',
+            },
+            {
+              situacao: '💪 Dor muscular após esforço',
+              tipo: 'fria-depois-quente',
+              instrucao: 'Imediatamente após: compressa fria (15–20 min) para reduzir inflamação. Após 48h ou em dores crônicas: compressa morna para relaxar a musculatura e melhorar a circulação.',
+            },
+            {
+              situacao: '👁️ Olho inchado / trauma ocular leve',
+              tipo: 'fria',
+              instrucao: 'Compressa fria com pano limpo e úmido, suavemente sobre o olho fechado, por 10 minutos. Nunca aplique pressão. Se houver dor intensa, perda de visão ou ferimento, procure atendimento imediato.',
+            },
+          ].map(item => (
+            <div key={item.situacao} className="px-4 py-3 flex items-start gap-3">
+              <span className={`shrink-0 mt-0.5 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap
+                ${item.tipo === 'fria'
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                  : item.tipo === 'quente'
+                  ? 'bg-orange-100 text-orange-700 border border-orange-300'
+                  : 'bg-purple-100 text-purple-700 border border-purple-300'}`}>
+                {item.tipo === 'fria' ? '🧊 Fria' : item.tipo === 'quente' ? '🔥 Quente' : '🔀 Fria→Quente'}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800 leading-snug">{item.situacao}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{item.instrucao}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* alerta fixo */}
       <div className="card p-4 border-red-200 bg-red-50">
         <h3 className="font-semibold text-red-700 text-sm mb-2">🚨 Sinais de alerta — procure atendimento</h3>
@@ -1522,7 +1584,7 @@ export default function DiarioPage() {
           {tab === 'receitas'       && <TabReceitas       patient={paciente} />}
           {tab === 'dicas'          && <TabDicas />}
           {tab === 'marcos'         && <TabMarcos         birthdate={paciente.birthdate} />}
-          {tab === 'vacinas'        && <TabVacinas        birthdate={paciente.birthdate} />}
+          {tab === 'vacinas'        && <TabVacinas        birthdate={paciente.birthdate} patientId={paciente.id} />}
           {tab === 'sintomas'       && <TabSintomas       patient={paciente} />}
           {tab === 'sono'           && <TabSono           patient={paciente} />}
           {tab === 'amamentacao'    && <TabAmamentacao    patient={paciente} />}

@@ -1,5 +1,9 @@
 import { useState } from 'react'
+import { Pill, Ruler } from 'lucide-react'
 
+/* ═══════════════════════════════════════════
+   CALCULADORA DE DOSE DE MEDICAMENTOS
+═══════════════════════════════════════════ */
 function calcular(c, pesoNum) {
   const pesoInt = Math.floor(pesoNum)
 
@@ -121,10 +125,9 @@ const MEDICAMENTOS = [
   },
 ]
 
-export default function TabCalculadora() {
+function CalcDose() {
   const [peso, setPeso] = useState('')
-
-  const pesoNum   = parseFloat(peso)
+  const pesoNum    = parseFloat(peso)
   const pesoValido = !isNaN(pesoNum) && pesoNum > 0 && pesoNum < 100
 
   return (
@@ -150,11 +153,9 @@ export default function TabCalculadora() {
                 <h3 className="font-semibold text-slate-800">{med.nome}</h3>
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{med.intervalo}</span>
               </div>
-
               {med.info && (
                 <p className="text-xs text-slate-400 leading-relaxed">{med.info}</p>
               )}
-
               <div className="space-y-1.5">
                 {med.concentracoes.map(c => {
                   const res = calcular(c, pesoNum)
@@ -185,6 +186,166 @@ export default function TabCalculadora() {
           ⚠️ <strong>Atenção:</strong> Este calculador é apenas orientativo. Sempre confirme a dose com o médico antes de administrar qualquer medicamento.
         </p>
       </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
+   CALCULADORA DE ALTURA-ALVO (ESTATURA GENÉTICA)
+═══════════════════════════════════════════ */
+function CalcAlturaAlvo() {
+  const [alturaPai,   setAlturaPai]   = useState('')
+  const [alturaMae,   setAlturaMae]   = useState('')
+  const [sexo,        setSexo]        = useState('M')
+
+  const pai = parseFloat(alturaPai)
+  const mae = parseFloat(alturaMae)
+  const valido = !isNaN(pai) && !isNaN(mae) && pai > 100 && pai < 230 && mae > 100 && mae < 230
+
+  let alvoMin = null, alvoMax = null, alvoMedio = null
+  if (valido) {
+    // Fórmula de Tanner (estatura-alvo genética)
+    const correcao = sexo === 'M' ? +13 : -13
+    alvoMedio = (pai + mae + correcao) / 2
+    alvoMin   = alvoMedio - 8.5
+    alvoMax   = alvoMedio + 8.5
+  }
+
+  const fmt = v => v != null ? v.toFixed(1) : '—'
+
+  return (
+    <div className="space-y-4">
+      {/* Sexo */}
+      <div className="card p-5 space-y-4">
+        <div>
+          <label className="label">Sexo biológico da criança</label>
+          <div className="flex gap-2 mt-1">
+            {[{ v: 'M', l: '♂ Masculino' }, { v: 'F', l: '♀ Feminino' }].map(op => (
+              <button key={op.v} onClick={() => setSexo(op.v)}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all
+                  ${sexo === op.v
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                {op.l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Altura do pai (cm)</label>
+            <input type="number" step="0.1" min="100" max="230" className="input"
+              placeholder="Ex: 178"
+              value={alturaPai}
+              onChange={e => setAlturaPai(e.target.value)} />
+          </div>
+          <div>
+            <label className="label">Altura da mãe (cm)</label>
+            <input type="number" step="0.1" min="100" max="230" className="input"
+              placeholder="Ex: 163"
+              value={alturaMae}
+              onChange={e => setAlturaMae(e.target.value)} />
+          </div>
+        </div>
+
+        {alturaPai && alturaMae && !valido && (
+          <p className="text-xs text-red-500">Informe alturas válidas (100–230 cm)</p>
+        )}
+      </div>
+
+      {/* Resultado */}
+      {valido && (
+        <div className="card p-5 space-y-4">
+          <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+            <Ruler size={18} className="text-blue-500" />
+            Estatura-alvo genética (Fórmula de Tanner)
+          </h3>
+
+          {/* Alvo central */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+            <p className="text-xs text-blue-500 font-medium mb-1">Estatura-alvo central</p>
+            <p className="text-4xl font-bold text-blue-700">{fmt(alvoMedio)} cm</p>
+          </div>
+
+          {/* Faixa normal */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-200">
+              <p className="text-xs text-slate-500 mb-1">Limite inferior</p>
+              <p className="text-xl font-bold text-slate-700">{fmt(alvoMin)} cm</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-200">
+              <p className="text-xs text-slate-500 mb-1">Limite superior</p>
+              <p className="text-xl font-bold text-slate-700">{fmt(alvoMax)} cm</p>
+            </div>
+          </div>
+
+          {/* Faixa visual */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs text-slate-400">
+              <span>{fmt(alvoMin)}</span>
+              <span>Faixa normal (±8,5 cm)</span>
+              <span>{fmt(alvoMax)}</span>
+            </div>
+            <div className="h-4 bg-slate-100 rounded-full overflow-hidden relative">
+              <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-center">
+                <div className="h-4 bg-gradient-to-r from-blue-200 via-blue-500 to-blue-200 rounded-full w-3/4" />
+              </div>
+            </div>
+          </div>
+
+          {/* Fórmula */}
+          <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+            <p className="text-xs font-semibold text-slate-600 mb-1">Como foi calculado:</p>
+            <p className="text-xs text-slate-500 font-mono">
+              ({fmt(pai)} + {fmt(mae)} {sexo === 'M' ? '+ 13' : '− 13'}) ÷ 2 = {fmt(alvoMedio)} cm
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {sexo === 'M' ? '♂ Masculino: soma +13 cm' : '♀ Feminino: subtrai 13 cm'} · Faixa normal: ±8,5 cm
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="card p-4 border-amber-200 bg-amber-50">
+        <p className="text-xs text-amber-800 leading-relaxed">
+          ⚠️ A estatura-alvo genética é uma <strong>estimativa</strong> baseada nas alturas dos pais. Fatores como nutrição, saúde e ambiente influenciam o crescimento real. Avalie sempre com o médico.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
+   COMPONENTE PRINCIPAL — 2 calculadoras
+═══════════════════════════════════════════ */
+export default function TabCalculadora() {
+  const [aba, setAba] = useState('dose')
+
+  return (
+    <div className="space-y-4">
+      {/* Seletor de calculadora */}
+      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+        <button
+          onClick={() => setAba('dose')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all
+            ${aba === 'dose'
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'}`}>
+          <Pill size={15} /> Dose de Medicamentos
+        </button>
+        <button
+          onClick={() => setAba('altura')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all
+            ${aba === 'altura'
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'}`}>
+          <Ruler size={15} /> Altura-Alvo
+        </button>
+      </div>
+
+      {aba === 'dose'   && <CalcDose />}
+      {aba === 'altura' && <CalcAlturaAlvo />}
     </div>
   )
 }

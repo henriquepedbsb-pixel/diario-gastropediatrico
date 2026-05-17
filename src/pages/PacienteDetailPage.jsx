@@ -1914,7 +1914,7 @@ export default function PacienteDetailPage() {
             {activeTab === 'receitas'       && <TabReceitas      patient={patient} />}
             {activeTab === 'dicas'          && <TabDicas         patient={patient} />}
             {activeTab === 'marcos'         && <TabMarcos        birthdate={patient.birthdate} />}
-            {activeTab === 'vacinas'        && <TabVacinas       birthdate={patient.birthdate} />}
+            {activeTab === 'vacinas'        && <TabVacinas       birthdate={patient.birthdate} patientId={patient.id} />}
             {activeTab === 'sintomas'       && <TabSintomas      patient={patient} />}
             {activeTab === 'sono'           && <TabSono          patient={patient} />}
             {activeTab === 'amamentacao'    && <TabAmamentacao   patient={patient} />}

@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react'
 import { differenceInMonths, parseISO } from 'date-fns'
-import { Syringe, CheckCircle2, Clock, AlertCircle, Star } from 'lucide-react'
+import { Syringe, CheckCircle2, Clock, AlertCircle, Star, Square } from 'lucide-react'
 
 /* ─────────────────────────────────────────────────────────────
    CALENDÁRIO SBIM 2026/2027 — Criança 0 a 10 anos
@@ -357,6 +358,10 @@ const COMBINADAS = [
 ]
 
 /* ─── Helpers ─── */
+function vacKey(faixaIdade, nomeVacina, dose) {
+  return `${faixaIdade}|${nomeVacina}|${dose}`
+}
+
 function StatusIcon({ status }) {
   if (status === 'passado') return <CheckCircle2 size={15} className="text-green-500 shrink-0" />
   if (status === 'atual')   return <Syringe      size={15} className="text-blue-500  shrink-0" />
@@ -364,15 +369,38 @@ function StatusIcon({ status }) {
   return                           <Clock        size={15} className="text-slate-300 shrink-0" />
 }
 
-export default function TabVacinas({ birthdate }) {
+export default function TabVacinas({ birthdate, patientId }) {
   const idadeMeses = birthdate
     ? differenceInMonths(new Date(), parseISO(birthdate))
     : null
+
+  // ── Vacinas marcadas como realizadas (persiste em localStorage por paciente) ──
+  const storageKey = `vaccinesDone_${patientId ?? 'default'}`
+  const [done, setDone] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]'))
+    } catch {
+      return new Set()
+    }
+  })
+
+  const toggleDone = (key) => {
+    setDone(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      localStorage.setItem(storageKey, JSON.stringify([...next]))
+      return next
+    })
+  }
 
   const proximoIndex = CALENDARIO.findIndex(
     (f, i) => idadeMeses != null && idadeMeses < f.mesRef + 1
       && (i === 0 || idadeMeses >= CALENDARIO[i - 1].mesRef + 1)
   )
+
+  // Contagem total de vacinas feitas
+  const totalVacinas = CALENDARIO.reduce((acc, f) => acc + f.vacinas.length, 0)
+  const totalFeitas  = done.size
 
   return (
     <div className="space-y-5">
@@ -386,9 +414,25 @@ export default function TabVacinas({ birthdate }) {
           Fonte: Sociedade Brasileira de Imunizações · Atualizado em 27/04/2026
         </p>
         <p className="text-xs text-blue-500">
-          Sempre que possível, preferir vacinas combinadas e considerar aplicações simultâneas na mesma visita.
+          Marque cada vacina realizada clicando no quadrado ao lado. O progresso fica salvo neste dispositivo.
         </p>
       </div>
+
+      {/* Barra de progresso */}
+      {totalFeitas > 0 && (
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-semibold text-slate-700">Vacinas marcadas como realizadas</p>
+            <p className="text-sm font-bold text-green-600">{totalFeitas} / {totalVacinas}</p>
+          </div>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-green-500 rounded-full transition-all duration-500"
+              style={{ width: `${(totalFeitas / totalVacinas) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Legenda */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-500">
@@ -409,11 +453,14 @@ export default function TabVacinas({ birthdate }) {
           const proximo = !passado && !atual && idx === proximoIndex
           const status  = passado ? 'passado' : atual ? 'atual' : proximo ? 'proximo' : 'futuro'
 
+          const todasFeitas = faixa.vacinas.every(v => done.has(vacKey(faixa.idade, v.nome, v.dose)))
+
           return (
             <div key={faixa.idade}
               className={`card overflow-hidden
                 ${atual   ? 'ring-2 ring-blue-400 shadow-md'  : ''}
-                ${proximo ? 'ring-2 ring-amber-300 shadow-sm' : ''}`}>
+                ${proximo ? 'ring-2 ring-amber-300 shadow-sm' : ''}
+                ${todasFeitas ? 'opacity-70' : ''}`}>
 
               {/* Header da faixa */}
               <div className={`px-4 py-2.5 flex items-center gap-2 border-b
@@ -426,40 +473,66 @@ export default function TabVacinas({ birthdate }) {
                   ${atual ? 'text-white' : passado ? 'text-slate-500' : 'text-slate-700'}`}>
                   {faixa.idade}
                 </span>
+                {todasFeitas && (
+                  <span className="ml-2 text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 size={11} /> Concluída
+                  </span>
+                )}
                 {atual   && <span className="ml-auto text-xs bg-white/25 text-white font-bold px-2 py-0.5 rounded-full">Atual</span>}
                 {proximo && <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">Próxima</span>}
-                {passado && <span className="ml-auto text-xs text-green-500 font-medium">✓ Realizada</span>}
               </div>
 
               {/* Lista de vacinas */}
               <div className="divide-y divide-slate-50">
-                {faixa.vacinas.map(v => (
-                  <div key={v.nome} className="px-4 py-3 flex items-start gap-3">
-                    {/* Badge SUS / Privado */}
-                    <span className={`mt-0.5 shrink-0 inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-full
-                      ${v.sus
-                        ? 'bg-green-100  text-green-700  border border-green-300'
-                        : 'bg-violet-100 text-violet-700 border border-violet-300'}`}>
-                      {v.sus ? 'SUS' : 'PVT'}
-                    </span>
+                {faixa.vacinas.map(v => {
+                  const key      = vacKey(faixa.idade, v.nome, v.dose)
+                  const feita    = done.has(key)
+                  return (
+                    <div key={v.nome}
+                      className={`px-4 py-3 flex items-start gap-3 transition-colors
+                        ${feita ? 'bg-green-50/60' : ''}`}>
 
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold leading-snug
-                        ${passado ? 'text-slate-500' : 'text-slate-800'}`}>
-                        {v.nome}
-                      </p>
-                      <p className={`text-xs font-medium mt-0.5 ${passado ? 'text-slate-400' : 'text-blue-600'}`}>
-                        {v.dose}
-                      </p>
-                      {v.info && (
-                        <p className={`text-xs mt-1 leading-relaxed whitespace-pre-line
-                          ${passado ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {v.info}
+                      {/* Checkbox de realizada */}
+                      <button
+                        onClick={() => toggleDone(key)}
+                        title={feita ? 'Marcar como não realizada' : 'Marcar como realizada'}
+                        className={`shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all
+                          ${feita
+                            ? 'bg-green-500 border-green-500 text-white'
+                            : 'border-slate-300 hover:border-green-400 bg-white'}`}>
+                        {feita && <CheckCircle2 size={13} className="text-white" />}
+                      </button>
+
+                      {/* Badge SUS / Privado */}
+                      <span className={`mt-0.5 shrink-0 inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-full
+                        ${v.sus
+                          ? 'bg-green-100  text-green-700  border border-green-300'
+                          : 'bg-violet-100 text-violet-700 border border-violet-300'}`}>
+                        {v.sus ? 'SUS' : 'PVT'}
+                      </span>
+
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold leading-snug
+                          ${feita ? 'line-through text-slate-400' : passado ? 'text-slate-500' : 'text-slate-800'}`}>
+                          {v.nome}
                         </p>
-                      )}
+                        <p className={`text-xs font-medium mt-0.5
+                          ${feita ? 'text-slate-400' : passado ? 'text-slate-400' : 'text-blue-600'}`}>
+                          {v.dose}
+                        </p>
+                        {v.info && !feita && (
+                          <p className={`text-xs mt-1 leading-relaxed whitespace-pre-line
+                            ${passado ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {v.info}
+                          </p>
+                        )}
+                        {feita && (
+                          <p className="text-xs text-green-600 font-medium mt-0.5">✓ Realizada</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )
