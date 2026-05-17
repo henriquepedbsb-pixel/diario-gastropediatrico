@@ -32,7 +32,7 @@ function DiaperIcon({ size = 24, className = '' }) {
 const TIPOS = [
   { value: 'seco',   label: '✅ Seca',         cor: 'bg-slate-100  text-slate-600  border-slate-300'  },
   { value: 'urina',  label: '💛 Urina',         cor: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
-  { value: 'fezes',  label: '🟫 Fezes',         cor: 'bg-amber-100  text-amber-700  border-amber-300'  },
+  { value: 'fezes',  label: '💩 Fezes',         cor: 'bg-amber-100  text-amber-700  border-amber-300'  },
   { value: 'misto',  label: '🔀 Urina + Fezes', cor: 'bg-orange-100 text-orange-700 border-orange-300' },
 ]
 
