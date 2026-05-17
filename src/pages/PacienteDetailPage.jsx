@@ -1764,6 +1764,7 @@ export default function PacienteDetailPage() {
       supabase.from('patients')
         .update({ last_doctor_seen_at: new Date().toISOString() })
         .eq('id', id)
+        .then(() => {})
     }
   }, [id])
 
