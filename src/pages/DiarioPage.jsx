@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { markPatientActivity } from '../lib/utils'
-import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
+import { format, parseISO, differenceInMonths, differenceInYears, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   UtensilsCrossed, FileText, Lightbulb, Droplets,
@@ -1513,6 +1513,230 @@ function TabCadastroPai({ patient, onUpdate }) {
 }
 
 /* ═══════════════════════════════════════════
+   PAINEL RESUMO — visão geral do diário
+═══════════════════════════════════════════ */
+const BRISTOL_RESUMO = ['','Constipação grave','Constipação leve','Normal','Ideal','Diarreia leve','Diarreia moderada','Diarreia grave']
+const BRISTOL_COR    = ['','text-red-600','text-orange-500','text-yellow-600','text-green-600','text-yellow-600','text-orange-500','text-red-600']
+
+function TabResumo({ patient, onNavigate }) {
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const pid = patient.id
+    Promise.all([
+      supabase.from('meals').select('eaten_at,description,meal_type').eq('patient_id', pid).order('eaten_at', { ascending: false }).limit(1),
+      supabase.from('stool_records').select('recorded_at,bristol_type,color').eq('patient_id', pid).order('recorded_at', { ascending: false }).limit(1),
+      supabase.from('symptom_records').select('recorded_at,symptoms,severity').eq('patient_id', pid).order('recorded_at', { ascending: false }).limit(1),
+      supabase.from('sleep_records').select('sleep_start,duration_minutes,quality').eq('patient_id', pid).order('sleep_start', { ascending: false }).limit(1),
+      supabase.from('breastfeeding_records').select('recorded_at,duration_minutes,side').eq('patient_id', pid).order('recorded_at', { ascending: false }).limit(1),
+      supabase.from('medications').select('name,dose').eq('patient_id', pid).eq('is_active', true),
+      supabase.from('food_introductions').select('food_name,introduced_at,reaction').eq('patient_id', pid).order('introduced_at', { ascending: false }).limit(1),
+      supabase.from('crying_records').select('recorded_at,duration_min,intensity').eq('patient_id', pid).order('recorded_at', { ascending: false }).limit(3),
+    ]).then(([meal, stool, symp, sleep, bf, meds, food, crying]) => {
+      setData({
+        meal:   meal.data?.[0]   ?? null,
+        stool:  stool.data?.[0]  ?? null,
+        symp:   symp.data?.[0]   ?? null,
+        sleep:  sleep.data?.[0]  ?? null,
+        bf:     bf.data?.[0]     ?? null,
+        meds:   meds.data        ?? [],
+        food:   food.data?.[0]   ?? null,
+        crying: crying.data      ?? [],
+      })
+      setLoading(false)
+    })
+  }, [patient.id])
+
+  const ago = (dateStr) => {
+    if (!dateStr) return null
+    try {
+      return formatDistanceToNow(parseISO(dateStr), { locale: ptBR, addSuffix: true })
+    } catch { return null }
+  }
+
+  if (loading) return (
+    <div className="grid grid-cols-2 gap-3">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="card h-28 animate-pulse bg-slate-100" />
+      ))}
+    </div>
+  )
+
+  const cards = [
+    {
+      tab:   'refeicoes',
+      emoji: '🍽️',
+      title: 'Refeições',
+      cor:   'border-l-orange-400 bg-orange-50/40',
+      iconCor: 'bg-orange-100 text-orange-600',
+      content: data.meal ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700 truncate">
+            {data.meal.meal_type ?? 'Refeição'}
+          </p>
+          <p className="text-xs text-slate-500 truncate">{data.meal.description ?? '—'}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.meal.eaten_at)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+    },
+    {
+      tab:   'fezes',
+      emoji: '💧',
+      title: 'Intestinal',
+      cor:   'border-l-blue-400 bg-blue-50/40',
+      iconCor: 'bg-blue-100 text-blue-600',
+      content: data.stool ? (
+        <>
+          <p className={`text-sm font-semibold ${BRISTOL_COR[data.stool.bristol_type] ?? 'text-slate-700'}`}>
+            Tipo {data.stool.bristol_type} · {BRISTOL_RESUMO[data.stool.bristol_type]}
+          </p>
+          <p className="text-xs text-slate-500 capitalize">{data.stool.color ?? ''}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.stool.recorded_at)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+    },
+    {
+      tab:   'sintomas',
+      emoji: '⚠️',
+      title: 'Sintomas',
+      cor:   'border-l-red-400 bg-red-50/40',
+      iconCor: 'bg-red-100 text-red-600',
+      content: data.symp ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700 truncate">
+            {Array.isArray(data.symp.symptoms) ? data.symp.symptoms.slice(0,2).join(', ') : '—'}
+          </p>
+          <p className="text-xs text-slate-500 capitalize">Severidade: {data.symp.severity ?? '—'}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.symp.recorded_at)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+    },
+    {
+      tab:   'sono',
+      emoji: '🌙',
+      title: 'Sono',
+      cor:   'border-l-indigo-400 bg-indigo-50/40',
+      iconCor: 'bg-indigo-100 text-indigo-600',
+      content: data.sleep ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700">
+            {data.sleep.duration_minutes ? `${Math.round(data.sleep.duration_minutes / 60 * 10) / 10}h` : '—'}
+          </p>
+          <p className="text-xs text-slate-500 capitalize">Qualidade: {data.sleep.quality ?? '—'}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.sleep.sleep_start)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+    },
+    {
+      tab:   'amamentacao',
+      emoji: '🤱',
+      title: 'Amamentação',
+      cor:   'border-l-pink-400 bg-pink-50/40',
+      iconCor: 'bg-pink-100 text-pink-600',
+      content: data.bf ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700">
+            {data.bf.duration_minutes ? `${data.bf.duration_minutes} min` : '—'}
+          </p>
+          <p className="text-xs text-slate-500 capitalize">{data.bf.side ?? ''}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.bf.recorded_at)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+    },
+    {
+      tab:   'medicamentos',
+      emoji: '💊',
+      title: 'Medicamentos',
+      cor:   'border-l-violet-400 bg-violet-50/40',
+      iconCor: 'bg-violet-100 text-violet-600',
+      content: data.meds.length > 0 ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700">
+            {data.meds.length} ativo{data.meds.length !== 1 ? 's' : ''}
+          </p>
+          <p className="text-xs text-slate-500 truncate">
+            {data.meds.slice(0, 2).map(m => m.name).join(', ')}
+            {data.meds.length > 2 ? ` +${data.meds.length - 2}` : ''}
+          </p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum ativo</p>,
+    },
+    {
+      tab:   'introducao',
+      emoji: '🌱',
+      title: 'Introdução Alim.',
+      cor:   'border-l-green-400 bg-green-50/40',
+      iconCor: 'bg-green-100 text-green-600',
+      content: data.food ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700 truncate">{data.food.food_name}</p>
+          <p className={`text-xs font-medium capitalize ${
+            data.food.reaction === 'aceito' ? 'text-green-600'
+            : data.food.reaction === 'alergia' ? 'text-red-600'
+            : 'text-slate-500'}`}>
+            {data.food.reaction ?? '—'}
+          </p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.food.introduced_at)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum alimento</p>,
+    },
+    {
+      tab:   'choro',
+      emoji: '😢',
+      title: 'Choro / Cólica',
+      cor:   'border-l-amber-400 bg-amber-50/40',
+      iconCor: 'bg-amber-100 text-amber-600',
+      content: data.crying.length > 0 ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700">
+            {data.crying.length} episódio{data.crying.length !== 1 ? 's' : ''} recentes
+          </p>
+          <p className="text-xs text-slate-500">
+            Último: {data.crying[0].intensity ?? '—'} · {data.crying[0].duration_min ? `${data.crying[0].duration_min} min` : ''}
+          </p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.crying[0].recorded_at)}</p>
+        </>
+      ) : <p className="text-xs text-slate-400">Nenhum episódio</p>,
+    },
+  ]
+
+  return (
+    <div className="space-y-5">
+      {/* Saudação */}
+      <div className="card p-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0">
+        <p className="text-xs font-medium opacity-80 mb-0.5">Visão geral do diário</p>
+        <p className="text-lg font-bold leading-snug">{patient.name}</p>
+        <p className="text-sm opacity-80">{calcIdade(patient.birthdate)}</p>
+      </div>
+
+      {/* Grid de cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {cards.map(card => (
+          <button key={card.tab} onClick={() => onNavigate(card.tab)}
+            className={`card p-3.5 text-left border-l-4 ${card.cor} hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.98]`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${card.iconCor}`}>
+                {card.emoji}
+              </span>
+              <span className="text-xs font-semibold text-slate-600">{card.title}</span>
+            </div>
+            <div className="space-y-0.5">
+              {card.content}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Atalho rápido */}
+      <div className="card p-4 border-dashed border-slate-300 bg-slate-50/50 text-center">
+        <p className="text-xs text-slate-400">Toque em qualquer card para abrir a seção completa</p>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
    WRAPPER — Hábito + Evolução Intestinal
 ═══════════════════════════════════════════ */
 function TabIntestinal({ patient }) {
@@ -1553,7 +1777,7 @@ const TABS = [
 export default function DiarioPage() {
   const { paciente, profile, refreshPaciente } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab    = searchParams.get('tab') || 'cadastro'
+  const tab    = searchParams.get('tab') || 'resumo'
   const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
 
 
@@ -1603,6 +1827,7 @@ export default function DiarioPage() {
       {/* Conteúdo principal — largura total */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl mx-auto">
+          {tab === 'resumo'         && <TabResumo         patient={paciente} onNavigate={setTab} />}
           {tab === 'cadastro'       && <TabCadastroPai    patient={paciente} onUpdate={refreshPaciente} />}
           {tab === 'refeicoes'      && <TabRefeicoes      patient={paciente} />}
           {tab === 'fezes'          && <TabIntestinal      patient={paciente} />}

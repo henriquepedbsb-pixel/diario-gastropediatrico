@@ -4,7 +4,7 @@ import {
   ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
   Milestone, Syringe, BookUser, MessageSquareQuote,
   AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen,
-  HelpCircle, MapPin, History, Sprout, Pill, Frown, Lightbulb,
+  HelpCircle, MapPin, History, Sprout, Pill, Frown, Lightbulb, LayoutDashboard,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
@@ -55,6 +55,7 @@ const DOCTOR_TABS = [
 ════════════════════════════════════════════════════════ */
 const PARENT_TABS = [
   H('Meu Filho(a)'),
+  { id: 'resumo',         label: 'Visão Geral',       icon: LayoutDashboard },
   { id: 'cadastro',       label: 'Cadastro',          icon: ClipboardList   },
 
   H('Alimentação'),
