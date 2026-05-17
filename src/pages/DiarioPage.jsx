@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { usePushSubscription } from '../hooks/usePushSubscription'
 import TabMarcos             from '../components/paciente/TabMarcos'
 import TabVacinas            from '../components/paciente/TabVacinas'
 import TabSintomas           from '../components/paciente/TabSintomas'
@@ -1468,6 +1469,9 @@ export default function DiarioPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab    = searchParams.get('tab') || 'cadastro'
   const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
+
+  // Registra push subscription para notificações móveis
+  usePushSubscription(profile?.id)
 
 
   /* Paciente não vinculado — formulário de solicitação */

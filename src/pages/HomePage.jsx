@@ -8,6 +8,7 @@ import {
 import { differenceInMonths, differenceInYears, parseISO, format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '../lib/supabase'
+import { usePushSubscription } from '../hooks/usePushSubscription'
 
 function saudacao() {
   const h = new Date().getHours()
@@ -134,6 +135,9 @@ export default function HomePage() {
   const navigate  = useNavigate()
   const location  = useLocation()
   const { profile } = useAuth()
+
+  // Registra push subscription para notificações móveis
+  usePushSubscription(profile?.id)
 
   // Notificação push em tempo real via Supabase Realtime
   useEffect(() => {
