@@ -8,6 +8,26 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { markPatientActivity } from '../../lib/utils'
 
+/* ── Ícone de fralda (SVG customizado) ──────────────────── */
+function DiaperIcon({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+      className={className}>
+      {/* Corpo da fralda */}
+      <path d="M5 8 C5 6 6.5 5 8 5 L16 5 C17.5 5 19 6 19 8 L19 16 C19 18 17.5 19 16 19 L8 19 C6.5 19 5 18 5 16 Z" />
+      {/* Recorte perna esquerda */}
+      <path d="M5 10.5 C7.5 10.5 7.5 13.5 5 13.5" />
+      {/* Recorte perna direita */}
+      <path d="M19 10.5 C16.5 10.5 16.5 13.5 19 13.5" />
+      {/* Aba esquerda */}
+      <rect x="1.5" y="6.5" width="4.5" height="3" rx="1" />
+      {/* Aba direita */}
+      <rect x="18" y="6.5" width="4.5" height="3" rx="1" />
+    </svg>
+  )
+}
+
 /* ── Opções ───────────────────────────────────────────── */
 const TIPOS = [
   { value: 'seco',   label: '✅ Seca',         cor: 'bg-slate-100  text-slate-600  border-slate-300'  },
@@ -163,7 +183,9 @@ export default function TabFraldas({ patient }) {
 
       {/* Info */}
       <div className="card p-4 bg-cyan-50 border-cyan-200 space-y-1">
-        <p className="text-sm font-semibold text-cyan-800">🍼 Registro de Fraldas</p>
+        <p className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
+          <DiaperIcon size={18} className="text-cyan-700" /> Registro de Fraldas
+        </p>
         <p className="text-xs text-cyan-700 leading-relaxed">
           Registre cada troca com tipo, cor e foto. As imagens ajudam o médico a avaliar cor e consistência.
         </p>
@@ -185,7 +207,7 @@ export default function TabFraldas({ patient }) {
         </div>
       ) : entries.length === 0 ? (
         <div className="card p-12 text-center text-slate-400">
-          <span className="text-5xl block mb-3">🍼</span>
+          <DiaperIcon size={48} className="mx-auto mb-3 text-slate-300" />
           <p className="font-medium">Nenhum registro de fralda</p>
           <p className="text-xs mt-1">Toque em "Nova troca" para começar</p>
         </div>
@@ -214,7 +236,7 @@ export default function TabFraldas({ patient }) {
                         </button>
                       ) : (
                         <div className="shrink-0 w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center">
-                          <span className="text-2xl">🍼</span>
+                          <DiaperIcon size={28} className="text-slate-400" />
                         </div>
                       )}
 

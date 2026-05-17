@@ -1721,7 +1721,7 @@ function TabIntestinal({ patient }) {
   const SUBTABS = [
     { id: 'habito',   label: '📋 Hábito'    },
     { id: 'evolucao', label: '📊 Evolução'  },
-    { id: 'fraldas',  label: '🍼 Fraldas'   },
+    { id: 'fraldas',  label: '👶 Fraldas'   },
   ]
   return (
     <div className="space-y-4">
