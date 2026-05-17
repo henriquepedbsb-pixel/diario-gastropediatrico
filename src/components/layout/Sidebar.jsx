@@ -3,15 +3,14 @@ import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb,
          ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
          Milestone, Syringe, BookUser, MessageSquareQuote,
          AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen, HelpCircle, MapPin,
-         BarChart2, History, Sprout, Pill, Frown } from 'lucide-react'
+         History, Sprout, Pill, Frown } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
 
 const DOCTOR_TABS_MAIN = [
   { id: 'cadastro',       label: 'Cadastro',          icon: ClipboardList   },
   { id: 'diario',         label: 'Diário Alimentar',  icon: UtensilsCrossed },
-  { id: 'fezes',          label: 'Fezes',             icon: Droplets        },
-  { id: 'graficosfezes',  label: 'Gráficos de Fezes', icon: BarChart2       },
+  { id: 'fezes',          label: 'Intestinal',        icon: Droplets        },
   { id: 'graficos',       label: 'Gráficos',          icon: TrendingUp      },
   { id: 'receitas',       label: 'Prescrições',       icon: FileText        },
   { id: 'vacinas',        label: 'Vacinas',           icon: Syringe         },
@@ -33,8 +32,7 @@ const DOCTOR_TABS_MAIN = [
 const PARENT_TABS_MAIN = [
   { id: 'cadastro',       label: 'Cadastro',          icon: ClipboardList   },
   { id: 'refeicoes',      label: 'Refeições',         icon: UtensilsCrossed },
-  { id: 'fezes',          label: 'Fezes',             icon: Droplets        },
-  { id: 'graficosfezes',  label: 'Gráficos de Fezes', icon: BarChart2       },
+  { id: 'fezes',          label: 'Intestinal',        icon: Droplets        },
   { id: 'receitas',       label: 'Prescrições',       icon: FileText        },
   { id: 'vacinas',        label: 'Vacinas',           icon: Syringe         },
   { id: 'sintomas',       label: 'Sintomas',          icon: AlertTriangle   },

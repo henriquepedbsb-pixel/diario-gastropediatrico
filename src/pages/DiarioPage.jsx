@@ -1513,12 +1513,37 @@ function TabCadastroPai({ patient, onUpdate }) {
 }
 
 /* ═══════════════════════════════════════════
+   WRAPPER — Hábito + Evolução Intestinal
+═══════════════════════════════════════════ */
+function TabIntestinal({ patient }) {
+  const [subTab, setSubTab] = useState('habito')
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+        <button onClick={() => setSubTab('habito')}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
+            ${subTab === 'habito' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          📋 Hábito Intestinal
+        </button>
+        <button onClick={() => setSubTab('evolucao')}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
+            ${subTab === 'evolucao' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          📊 Evolução Intestinal
+        </button>
+      </div>
+      {subTab === 'habito'   && <TabFezes        patient={patient} />}
+      {subTab === 'evolucao' && <TabGraficoFezes patient={patient} />}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
    PÁGINA PRINCIPAL
 ═══════════════════════════════════════════ */
 const TABS = [
   { id: 'cadastro',  label: 'Cadastro',  icon: ClipboardList   },
   { id: 'refeicoes', label: 'Refeições', icon: UtensilsCrossed },
-  { id: 'fezes',     label: 'Fezes',     icon: Droplets        },
+  { id: 'fezes',     label: 'Intestinal', icon: Droplets       },
   { id: 'receitas',  label: 'Receitas',  icon: FileText        },
   { id: 'dicas',     label: 'Dicas',     icon: Lightbulb       },
   { id: 'marcos',    label: 'Marcos',    icon: Milestone       },
@@ -1580,7 +1605,7 @@ export default function DiarioPage() {
         <div className="max-w-2xl mx-auto">
           {tab === 'cadastro'       && <TabCadastroPai    patient={paciente} onUpdate={refreshPaciente} />}
           {tab === 'refeicoes'      && <TabRefeicoes      patient={paciente} />}
-          {tab === 'fezes'          && <TabFezes          patient={paciente} />}
+          {tab === 'fezes'          && <TabIntestinal      patient={paciente} />}
           {tab === 'receitas'       && <TabReceitas       patient={paciente} />}
           {tab === 'dicas'          && <TabDicas />}
           {tab === 'marcos'         && <TabMarcos         birthdate={paciente.birthdate} />}
@@ -1596,7 +1621,7 @@ export default function DiarioPage() {
           {tab === 'medicamentos'   && <TabMedicamentos        patient={paciente} />}
           {tab === 'introducao'     && <TabIntroducaoAlimentar patient={paciente} />}
           {tab === 'choro'          && <TabChoro               patient={paciente} />}
-          {tab === 'graficosfezes'  && <TabGraficoFezes        patient={paciente} />}
+          {tab === 'graficosfezes'  && <TabIntestinal          patient={paciente} />}
           {tab === 'timeline'       && <TabTimeline            patient={paciente} />}
         </div>
       </div>
