@@ -2,7 +2,8 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb,
          ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
          Milestone, Syringe, BookUser, MessageSquareQuote,
-         AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen, HelpCircle, MapPin } from 'lucide-react'
+         AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen, HelpCircle, MapPin,
+         BarChart2, History, Sprout, Pill, Frown } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
 
@@ -19,6 +20,11 @@ const DOCTOR_TABS_MAIN = [
   { id: 'idadecorrigida', label: 'Idade Corrigida',   icon: Calculator      },
   { id: 'alertas',        label: 'Alertas',           icon: Bell            },
   { id: 'documentos',     label: 'Documentos',        icon: FolderOpen      },
+  { id: 'medicamentos',   label: 'Medicamentos',      icon: Pill               },
+  { id: 'introducao',     label: 'Introdução Alim.',  icon: Sprout             },
+  { id: 'choro',          label: 'Choro / Cólica',   icon: Frown              },
+  { id: 'graficosfezes',  label: 'Gráficos de Fezes', icon: BarChart2          },
+  { id: 'timeline',       label: 'Linha do Tempo',   icon: History            },
   { id: 'calculadora',    label: 'Calculadora Dose',  icon: Calculator         },
   { id: 'faq',            label: 'Dúvidas (FAQ)',     icon: HelpCircle         },
   { id: 'depoimentos',   label: 'Depoimentos',       icon: MessageSquareQuote, href: '/dashboard/depoimentos' },
@@ -36,6 +42,11 @@ const PARENT_TABS_MAIN = [
   { id: 'idadecorrigida', label: 'Idade Corrigida',   icon: Calculator      },
   { id: 'alertas',        label: 'Alertas',           icon: Bell            },
   { id: 'documentos',     label: 'Documentos',        icon: FolderOpen      },
+  { id: 'medicamentos',   label: 'Medicamentos',      icon: Pill            },
+  { id: 'introducao',     label: 'Introdução Alim.',  icon: Sprout          },
+  { id: 'choro',          label: 'Choro / Cólica',   icon: Frown           },
+  { id: 'graficosfezes',  label: 'Gráficos de Fezes', icon: BarChart2       },
+  { id: 'timeline',       label: 'Linha do Tempo',   icon: History         },
   { id: 'calculadora',    label: 'Calculadora Dose',  icon: Calculator         },
   { id: 'faq',            label: 'Dúvidas (FAQ)',     icon: HelpCircle         },
   { id: 'depoimentos',   label: 'Depoimentos',       icon: MessageSquareQuote, href: '/depoimentos' },

@@ -3,17 +3,24 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
          ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
-         Milestone, Syringe, Camera } from 'lucide-react'
-import TabMarcos        from '../components/paciente/TabMarcos'
-import TabVacinas       from '../components/paciente/TabVacinas'
-import TabSintomas      from '../components/paciente/TabSintomas'
-import TabSono          from '../components/paciente/TabSono'
-import TabAmamentacao   from '../components/paciente/TabAmamentacao'
-import TabIdadeCorrigida from '../components/paciente/TabIdadeCorrigida'
-import TabAlertas       from '../components/paciente/TabAlertas'
-import TabDocumentos    from '../components/paciente/TabDocumentos'
-import TabCalculadora   from '../components/paciente/TabCalculadora'
-import TabFAQ           from '../components/paciente/TabFAQ'
+         Milestone, Syringe, Camera, FileDown, Sheet } from 'lucide-react'
+import TabMarcos             from '../components/paciente/TabMarcos'
+import TabVacinas            from '../components/paciente/TabVacinas'
+import TabSintomas           from '../components/paciente/TabSintomas'
+import TabSono               from '../components/paciente/TabSono'
+import TabAmamentacao        from '../components/paciente/TabAmamentacao'
+import TabIdadeCorrigida     from '../components/paciente/TabIdadeCorrigida'
+import TabAlertas            from '../components/paciente/TabAlertas'
+import TabDocumentos         from '../components/paciente/TabDocumentos'
+import TabCalculadora        from '../components/paciente/TabCalculadora'
+import TabFAQ                from '../components/paciente/TabFAQ'
+import TabGraficoFezes       from '../components/paciente/TabGraficoFezes'
+import TabIntroducaoAlimentar from '../components/paciente/TabIntroducaoAlimentar'
+import TabMedicamentos       from '../components/paciente/TabMedicamentos'
+import TabChoro              from '../components/paciente/TabChoro'
+import TabTimeline           from '../components/paciente/TabTimeline'
+import { exportPatientPDF }  from '../lib/exportPDF'
+import { exportPatientExcel } from '../lib/exportExcel'
 import { useAuth } from '../contexts/AuthContext'
 import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -1818,13 +1825,50 @@ export default function PacienteDetailPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h1 className="font-bold text-slate-800 text-lg leading-tight truncate">{patient.name}</h1>
-              <button
-                onClick={() => setConfirmDel(true)}
-                title="Excluir paciente"
-                className="shrink-0 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <Trash2 size={16} />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={async () => {
+                    const [s, m, sy, sl, f, c] = await Promise.all([
+                      supabase.from('stool_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }).limit(50),
+                      supabase.from('medications').select('*').eq('patient_id', patient.id),
+                      supabase.from('symptom_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }).limit(30),
+                      supabase.from('sleep_records').select('*').eq('patient_id', patient.id).order('sleep_start', { ascending: false }).limit(30),
+                      supabase.from('food_introductions').select('*').eq('patient_id', patient.id),
+                      supabase.from('crying_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }).limit(30),
+                    ])
+                    exportPatientPDF(patient, { stools: s.data, medications: m.data, symptoms: sy.data, sleep: sl.data, foods: f.data, crying: c.data })
+                  }}
+                  title="Exportar PDF"
+                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <FileDown size={16} />
+                </button>
+                <button
+                  onClick={async () => {
+                    const [s, m, sy, sl, me, f, c] = await Promise.all([
+                      supabase.from('stool_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }),
+                      supabase.from('meals').select('*').eq('patient_id', patient.id).order('eaten_at', { ascending: false }),
+                      supabase.from('symptom_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }),
+                      supabase.from('sleep_records').select('*').eq('patient_id', patient.id).order('sleep_start', { ascending: false }),
+                      supabase.from('medications').select('*').eq('patient_id', patient.id),
+                      supabase.from('food_introductions').select('*').eq('patient_id', patient.id),
+                      supabase.from('crying_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }),
+                    ])
+                    exportPatientExcel(patient, { stools: s.data, meals: m.data, symptoms: sy.data, sleep: sl.data, medications: me.data, foods: f.data, crying: c.data })
+                  }}
+                  title="Exportar Excel"
+                  className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  <Sheet size={16} />
+                </button>
+                <button
+                  onClick={() => setConfirmDel(true)}
+                  title="Excluir paciente"
+                  className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className="text-sm text-slate-500">{calcIdade(patient.birthdate)}</span>
@@ -1879,6 +1923,11 @@ export default function PacienteDetailPage() {
             {activeTab === 'documentos'     && <TabDocumentos    patient={patient} />}
             {activeTab === 'calculadora'    && <TabCalculadora />}
             {activeTab === 'faq'            && <TabFAQ />}
+            {activeTab === 'medicamentos'   && <TabMedicamentos        patient={patient} />}
+            {activeTab === 'introducao'     && <TabIntroducaoAlimentar patient={patient} />}
+            {activeTab === 'choro'          && <TabChoro               patient={patient} />}
+            {activeTab === 'graficosfezes'  && <TabGraficoFezes        patient={patient} />}
+            {activeTab === 'timeline'       && <TabTimeline            patient={patient} />}
           </div>
           </div>
         </div>

@@ -11,16 +11,21 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import TabMarcos        from '../components/paciente/TabMarcos'
-import TabVacinas       from '../components/paciente/TabVacinas'
-import TabSintomas      from '../components/paciente/TabSintomas'
-import TabSono          from '../components/paciente/TabSono'
-import TabAmamentacao   from '../components/paciente/TabAmamentacao'
-import TabIdadeCorrigida from '../components/paciente/TabIdadeCorrigida'
-import TabAlertas       from '../components/paciente/TabAlertas'
-import TabDocumentos    from '../components/paciente/TabDocumentos'
-import TabCalculadora   from '../components/paciente/TabCalculadora'
-import TabFAQ           from '../components/paciente/TabFAQ'
+import TabMarcos             from '../components/paciente/TabMarcos'
+import TabVacinas            from '../components/paciente/TabVacinas'
+import TabSintomas           from '../components/paciente/TabSintomas'
+import TabSono               from '../components/paciente/TabSono'
+import TabAmamentacao        from '../components/paciente/TabAmamentacao'
+import TabIdadeCorrigida     from '../components/paciente/TabIdadeCorrigida'
+import TabAlertas            from '../components/paciente/TabAlertas'
+import TabDocumentos         from '../components/paciente/TabDocumentos'
+import TabCalculadora        from '../components/paciente/TabCalculadora'
+import TabFAQ                from '../components/paciente/TabFAQ'
+import TabGraficoFezes       from '../components/paciente/TabGraficoFezes'
+import TabIntroducaoAlimentar from '../components/paciente/TabIntroducaoAlimentar'
+import TabMedicamentos       from '../components/paciente/TabMedicamentos'
+import TabChoro              from '../components/paciente/TabChoro'
+import TabTimeline           from '../components/paciente/TabTimeline'
 
 /* ─── helpers ─── */
 
@@ -1525,6 +1530,11 @@ export default function DiarioPage() {
           {tab === 'documentos'     && <TabDocumentos     patient={paciente} />}
           {tab === 'calculadora'    && <TabCalculadora />}
           {tab === 'faq'            && <TabFAQ />}
+          {tab === 'medicamentos'   && <TabMedicamentos        patient={paciente} />}
+          {tab === 'introducao'     && <TabIntroducaoAlimentar patient={paciente} />}
+          {tab === 'choro'          && <TabChoro               patient={paciente} />}
+          {tab === 'graficosfezes'  && <TabGraficoFezes        patient={paciente} />}
+          {tab === 'timeline'       && <TabTimeline            patient={paciente} />}
         </div>
       </div>
     </div>

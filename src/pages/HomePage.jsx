@@ -135,6 +135,31 @@ export default function HomePage() {
   const location  = useLocation()
   const { profile } = useAuth()
 
+  // Notificação push em tempo real via Supabase Realtime
+  useEffect(() => {
+    if (Notification.permission === 'default') Notification.requestPermission()
+
+    const channel = supabase.channel('realtime-activity')
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'patients',
+      }, (payload) => {
+        const p = payload.new
+        const hasNew = p.last_activity_at && (
+          !p.last_doctor_seen_at ||
+          new Date(p.last_activity_at) > new Date(p.last_doctor_seen_at)
+        )
+        if (hasNew && Notification.permission === 'granted') {
+          new Notification('📋 Nova atividade no diário', {
+            body: `${p.name}: ${p.last_activity_label || 'Novo registro'}`,
+            icon: '/pwa-192x192.png',
+          })
+        }
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [])
+
   const [patients,     setPatients]     = useState([])
   const [prescCount,   setPrescCount]   = useState(null)
   const [tipsCount,    setTipsCount]    = useState(null)
