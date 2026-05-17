@@ -62,7 +62,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, onClick }) {
 }
 
 /* ── Card de paciente ── */
-function PatientCard({ patient, onClick }) {
+function PatientCard({ patient, onClick, onClearBadge }) {
   const cor      = avatarStyle[patient.gender] ?? avatarStyle.default
   const initials = patient.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   const allergies = Array.isArray(patient.allergies)
@@ -79,7 +79,7 @@ function PatientCard({ patient, onClick }) {
 
   return (
     <button
-      onClick={onClick}
+      onClick={() => { onClearBadge?.(); onClick?.() }}
       className={`card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:scale-[0.98] ${
         hasNewActivity ? 'ring-2 ring-orange-300 ring-offset-1' : ''
       }`}
@@ -504,6 +504,9 @@ export default function HomePage() {
               <PatientCard
                 key={p.id}
                 patient={p}
+                onClearBadge={() => setPatients(prev => prev.map(x =>
+                  x.id === p.id ? { ...x, last_doctor_seen_at: new Date().toISOString() } : x
+                ))}
                 onClick={() => navigate(`/dashboard/pacientes/${p.id}`)}
               />
             ))}
