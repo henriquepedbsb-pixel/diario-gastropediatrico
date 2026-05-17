@@ -1,29 +1,49 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { Home, UserPlus, Stethoscope, X, LogOut, User, Lightbulb,
          ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
-         Milestone, Syringe, BookUser, MessageSquareQuote } from 'lucide-react'
+         Milestone, Syringe, BookUser, MessageSquareQuote,
+         AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen, HelpCircle, MapPin } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
 
-const DOCTOR_TABS = [
-  { id: 'cadastro',  label: 'Cadastro',         icon: ClipboardList   },
-  { id: 'diario',   label: 'Diário Alimentar', icon: UtensilsCrossed },
-  { id: 'fezes',    label: 'Fezes',             icon: Droplets        },
-  { id: 'graficos', label: 'Gráficos',          icon: TrendingUp      },
-  { id: 'receitas', label: 'Receitas',          icon: FileText        },
-  { id: 'dicas',    label: 'Dicas',             icon: Lightbulb       },
-  { id: 'marcos',   label: 'Marcos',            icon: Milestone       },
-  { id: 'vacinas',  label: 'Vacinas',           icon: Syringe         },
+const DOCTOR_TABS_MAIN = [
+  { id: 'cadastro',       label: 'Cadastro',          icon: ClipboardList   },
+  { id: 'diario',         label: 'Diário Alimentar',  icon: UtensilsCrossed },
+  { id: 'fezes',          label: 'Fezes',             icon: Droplets        },
+  { id: 'graficos',       label: 'Gráficos',          icon: TrendingUp      },
+  { id: 'receitas',       label: 'Prescrições',       icon: FileText        },
+  { id: 'vacinas',        label: 'Vacinas',           icon: Syringe         },
+  { id: 'sintomas',       label: 'Sintomas',          icon: AlertTriangle   },
+  { id: 'sono',           label: 'Sono',              icon: Moon            },
+  { id: 'amamentacao',    label: 'Amamentação',       icon: Baby            },
+  { id: 'idadecorrigida', label: 'Idade Corrigida',   icon: Calculator      },
+  { id: 'alertas',        label: 'Alertas',           icon: Bell            },
+  { id: 'documentos',     label: 'Documentos',        icon: FolderOpen      },
+  { id: 'calculadora',    label: 'Calculadora Dose',  icon: Calculator         },
+  { id: 'faq',            label: 'Dúvidas (FAQ)',     icon: HelpCircle         },
+  { id: 'depoimentos',   label: 'Depoimentos',       icon: MessageSquareQuote, href: '/dashboard/depoimentos' },
 ]
 
-const PARENT_TABS = [
-  { id: 'cadastro',  label: 'Cadastro',  icon: ClipboardList   },
-  { id: 'refeicoes', label: 'Refeições', icon: UtensilsCrossed },
-  { id: 'fezes',     label: 'Fezes',     icon: Droplets        },
-  { id: 'receitas',  label: 'Receitas',  icon: FileText        },
-  { id: 'dicas',     label: 'Dicas',     icon: Lightbulb       },
-  { id: 'marcos',    label: 'Marcos',    icon: Milestone       },
-  { id: 'vacinas',   label: 'Vacinas',   icon: Syringe         },
+const PARENT_TABS_MAIN = [
+  { id: 'cadastro',       label: 'Cadastro',          icon: ClipboardList   },
+  { id: 'refeicoes',      label: 'Refeições',         icon: UtensilsCrossed },
+  { id: 'fezes',          label: 'Fezes',             icon: Droplets        },
+  { id: 'receitas',       label: 'Prescrições',       icon: FileText        },
+  { id: 'vacinas',        label: 'Vacinas',           icon: Syringe         },
+  { id: 'sintomas',       label: 'Sintomas',          icon: AlertTriangle   },
+  { id: 'sono',           label: 'Sono',              icon: Moon            },
+  { id: 'amamentacao',    label: 'Amamentação',       icon: Baby            },
+  { id: 'idadecorrigida', label: 'Idade Corrigida',   icon: Calculator      },
+  { id: 'alertas',        label: 'Alertas',           icon: Bell            },
+  { id: 'documentos',     label: 'Documentos',        icon: FolderOpen      },
+  { id: 'calculadora',    label: 'Calculadora Dose',  icon: Calculator         },
+  { id: 'faq',            label: 'Dúvidas (FAQ)',     icon: HelpCircle         },
+  { id: 'depoimentos',   label: 'Depoimentos',       icon: MessageSquareQuote, href: '/depoimentos' },
+]
+
+const TABS_INSTRUCOES = [
+  { id: 'marcos', label: 'Marcos do Desenvolvimento', icon: Milestone },
+  { id: 'dicas',  label: 'Dicas',                     icon: Lightbulb },
 ]
 
 export default function Sidebar({ onClose }) {
@@ -32,25 +52,47 @@ export default function Sidebar({ onClose }) {
   const { profile, signOut } = useAuth()
   const isMedico  = isDoctor(profile?.role)
 
-  // Detecta contexto para exibir seções contextuais
   const patientMatch = location.pathname.match(/^\/dashboard\/pacientes\/([^/]+)$/)
   const patientId    = patientMatch?.[1] ?? null
   const isDiario     = location.pathname === '/diario'
 
-  // Aba ativa vem do query param ?tab=...
   const activeTab = new URLSearchParams(location.search).get('tab') || 'cadastro'
 
-  const goTab = (tabId) => {
-    if (patientId) navigate(`/dashboard/pacientes/${patientId}?tab=${tabId}`)
-    else if (isDiario) navigate(`/diario?tab=${tabId}`)
+  const goTabDoctor = (tabId) => {
+    navigate(`/dashboard/pacientes/${patientId}?tab=${tabId}`)
     onClose?.()
   }
 
-  const contextTabs = patientId ? DOCTOR_TABS : isDiario ? PARENT_TABS : null
+  const goTabParent = (tabId) => {
+    navigate(`/diario?tab=${tabId}`)
+    onClose?.()
+  }
 
   const handleLogout = async () => {
     await signOut()
     navigate('/login', { replace: true })
+  }
+
+  const renderTab = (tab, onClickFn, indented = false) => {
+    const Icon     = tab.icon
+    const isActive = tab.href
+      ? location.pathname === tab.href
+      : activeTab === tab.id
+    const handleClick = tab.href
+      ? () => { navigate(tab.href); onClose?.() }
+      : () => onClickFn(tab.id)
+    return (
+      <button key={tab.id} onClick={handleClick}
+        className={`w-full flex items-center gap-3 ${indented ? 'pl-9 pr-3 py-2' : 'px-3 py-2.5'} rounded-lg text-sm font-medium transition-colors ${
+          isActive
+            ? 'bg-blue-50 text-blue-700'
+            : indented
+            ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+            : 'text-slate-600 hover:bg-slate-100'
+        }`}>
+        <Icon size={indented ? 16 : 18} /> {tab.label}
+      </button>
+    )
   }
 
   return (
@@ -95,83 +137,61 @@ export default function Sidebar({ onClose }) {
               <UserPlus size={18} /> Novo Paciente
             </button>
 
-            <NavLink to="/dashboard/dicas" onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }>
-              <Lightbulb size={18} /> Dicas &amp; Orientações
-            </NavLink>
-
-            <NavLink to="/dashboard/depoimentos" onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }>
-              <MessageSquareQuote size={18} /> Depoimentos
-            </NavLink>
           </>
         )}
 
         {!isMedico && (
           <>
-            {/* Link principal */}
             <NavLink to="/diario" end onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
                 }`
               }>
-              <Home size={18} /> Diário do Meu Filho
+              <Home size={18} /> Diário do Meu Filho(a)
             </NavLink>
 
-            {/* Sub-itens — aparecem diretamente abaixo quando está no diário */}
-            {isDiario && PARENT_TABS.map(tab => {
-              const Icon     = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button key={tab.id} onClick={() => goTab(tab.id)}
-                  className={`w-full flex items-center gap-3 pl-9 pr-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'text-blue-700 bg-blue-50'
-                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                  }`}>
-                  <Icon size={16} /> {tab.label}
-                </button>
-              )
-            })}
+
+            {/* Sub-itens do diário */}
+            {isDiario && (
+              <>
+                {PARENT_TABS_MAIN.map(tab => renderTab(tab, goTabParent, true))}
+
+                {/* Instruções Gerais */}
+                <div className="pt-2 pb-1">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 py-1">
+                    Instruções Gerais
+                  </p>
+                </div>
+                {TABS_INSTRUCOES.map(tab => renderTab(tab, goTabParent, true))}
+              </>
+            )}
           </>
         )}
 
-        {/* ── Seções do médico (aparece dentro de um paciente) ── */}
+        {/* ── Seções do médico (dentro de um paciente) ── */}
         {patientId && (
           <>
             <div className="pt-3 pb-1">
               <div className="h-px bg-slate-100 mb-3" />
               <p className="section-header px-2">Seções do Paciente</p>
             </div>
-            {DOCTOR_TABS.map(tab => {
-              const Icon     = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button key={tab.id} onClick={() => goTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}>
-                  <Icon size={18} /> {tab.label}
-                </button>
-              )
-            })}
+
+            {DOCTOR_TABS_MAIN.map(tab => renderTab(tab, goTabDoctor))}
+
+            {/* Instruções Gerais */}
+            <div className="pt-2 pb-1">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 py-1">
+                Instruções Gerais
+              </p>
+            </div>
+            {TABS_INSTRUCOES.map(tab => renderTab(tab, goTabDoctor))}
           </>
         )}
       </nav>
 
-      {/* Currículo do médico — link destacado */}
-      <div className="px-3 pb-3">
+      {/* Currículo + Clínicas */}
+      <div className="px-3 pb-3 space-y-1">
         <div className="h-px bg-slate-100 mb-3" />
         <NavLink to="/curriculo" onClick={onClose}
           className={({ isActive }) =>
@@ -182,9 +202,18 @@ export default function Sidebar({ onClose }) {
             }`
           }>
           <BookUser size={18} />
-          <div className="flex-1 min-w-0">
-            <span>Currículo do Médico</span>
-          </div>
+          <span>Currículo do Médico</span>
+        </NavLink>
+        <NavLink to="/clinicas" onClick={onClose}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-green-50 text-green-700 border border-green-100'
+                : 'text-green-600 hover:bg-green-50'
+            }`
+          }>
+          <MapPin size={18} />
+          <span>Clínicas de Atendimento</span>
         </NavLink>
       </div>
 

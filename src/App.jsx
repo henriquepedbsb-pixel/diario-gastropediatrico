@@ -11,6 +11,7 @@ import PacienteDetailPage from './pages/PacienteDetailPage'
 import DiarioPage from './pages/DiarioPage'
 import DicasPage from './pages/DicasPage'
 import CurriculoPage from './pages/CurriculoPage'
+import ClinicasPage  from './pages/ClinicasPage'
 import DepoimentosPage from './pages/DepoimentosPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
@@ -82,9 +83,10 @@ export default function App() {
             <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />} />
           </Route>
 
-          {/* Médico */}
-          {/* Currículo — visível para todos os autenticados */}
-          <Route path="/curriculo" element={<CurriculoPage />} />
+          {/* Visível para todos os autenticados */}
+          <Route path="/curriculo"    element={<CurriculoPage />} />
+          <Route path="/depoimentos"  element={<DepoimentosPage />} />
+          <Route path="/clinicas"     element={<ClinicasPage />} />
 
           {/* Pai / Responsável */}
           <Route element={<SomentePai />}>

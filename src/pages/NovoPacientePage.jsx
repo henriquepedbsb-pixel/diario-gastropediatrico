@@ -178,7 +178,7 @@ export default function NovoPacientePage() {
           </Field>
 
           {/* Data de nascimento + gênero */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Data de nascimento *" error={errors.birthdate?.message}>
               <input
                 type="date"

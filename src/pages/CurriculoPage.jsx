@@ -83,17 +83,17 @@ export default function CurriculoPage() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
 
       {/* Cabeçalho */}
-      <div className="card p-6 flex items-center gap-6">
+      <div className="card p-6 flex flex-col sm:flex-row items-center gap-6">
         {/* Foto perfil */}
         <div className="shrink-0">
           <img
             src="/medico.jpg"
             alt="Dr. Henrique Gomes"
-            className="w-36 h-44 rounded-2xl object-cover object-top shadow-md border border-slate-100"
+            className="w-32 h-40 sm:w-36 sm:h-44 rounded-2xl object-cover object-top shadow-md border border-slate-100"
           />
         </div>
         {/* Texto */}
-        <div className="min-w-0">
+        <div className="min-w-0 text-center sm:text-left w-full">
           <h1 className="text-xl font-bold text-slate-800 leading-tight">Dr. Henrique Gomes</h1>
           <p className="text-sm text-teal-600 font-medium mt-0.5">Pediatra · Gastropediatra</p>
           <p className="text-sm text-slate-500 mt-3 leading-relaxed">
@@ -101,7 +101,7 @@ export default function CurriculoPage() {
             Experiência em bebês prematuros. Prevenção é sempre o melhor remédio.
           </p>
           {/* Links */}
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="flex flex-col gap-2 mt-4 items-center sm:items-start">
             <a
               href="https://www.doctoralia.com.br/henrique-gomes-3/gastroenterologista-pediatrico-pediatra/brasilia#address-id=1073907&is-online-only=false&filters%5Bspecializations%5D%5B%5D=71"
               target="_blank"

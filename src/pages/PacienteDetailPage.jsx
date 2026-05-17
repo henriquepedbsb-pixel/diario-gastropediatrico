@@ -4,8 +4,16 @@ import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
          ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
          Milestone, Syringe, Camera } from 'lucide-react'
-import TabMarcos  from '../components/paciente/TabMarcos'
-import TabVacinas from '../components/paciente/TabVacinas'
+import TabMarcos        from '../components/paciente/TabMarcos'
+import TabVacinas       from '../components/paciente/TabVacinas'
+import TabSintomas      from '../components/paciente/TabSintomas'
+import TabSono          from '../components/paciente/TabSono'
+import TabAmamentacao   from '../components/paciente/TabAmamentacao'
+import TabIdadeCorrigida from '../components/paciente/TabIdadeCorrigida'
+import TabAlertas       from '../components/paciente/TabAlertas'
+import TabDocumentos    from '../components/paciente/TabDocumentos'
+import TabCalculadora   from '../components/paciente/TabCalculadora'
+import TabFAQ           from '../components/paciente/TabFAQ'
 import { useAuth } from '../contexts/AuthContext'
 import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -352,7 +360,7 @@ function TabelaMedidas({ medidas, onDelete }) {
               <th className="px-4 py-2.5 text-left font-medium">Data</th>
               <th className="px-3 py-2.5 text-right font-medium">Peso (kg)</th>
               <th className="px-3 py-2.5 text-right font-medium">Alt. (cm)</th>
-              <th className="px-3 py-2.5 text-right font-medium">PC (cm)</th>
+              <th className="px-3 py-2.5 text-right font-medium">PC</th>
               <th className="px-2 py-2.5" />
             </tr>
           </thead>
@@ -546,7 +554,7 @@ function TabGraficos({ patient }) {
                   onChange={e => setForm(f => ({ ...f, height_cm: e.target.value }))} />
               </div>
               <div>
-                <label className="label flex items-center gap-1"><Brain size={12} /> PC (cm)</label>
+                <label className="label flex items-center gap-1"><Brain size={12} /> Perímetro Cefálico (cm)</label>
                 <input type="number" step="0.1" className="input" placeholder="ex: 42.0"
                   value={form.head_circumference_cm}
                   onChange={e => setForm(f => ({ ...f, head_circumference_cm: e.target.value }))} />
@@ -1046,6 +1054,7 @@ function TagInput({ tags, onChange }) {
 const BLOOD_TYPES = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−']
 
 function TabCadastro({ patient, onUpdate }) {
+  const navigate = useNavigate()
   /* ── parse notes ── */
   let notesData = {}
   if (patient.notes) {
@@ -1211,6 +1220,14 @@ function TabCadastro({ patient, onUpdate }) {
       {/* ── Modo exibição ── */}
       {!editing && (
         <>
+          {/* Botão retornar */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            ← Retornar ao menu principal
+          </button>
+
           {/* Foto do paciente */}
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
@@ -1391,7 +1408,7 @@ function TabCadastro({ patient, onUpdate }) {
                   onChange={e => setForm(f => ({ ...f, birth_height: e.target.value }))} />
               </div>
               <div>
-                <label className="label flex items-center gap-1"><Brain size={12} /> PC (cm)</label>
+                <label className="label flex items-center gap-1"><Brain size={12} /> Perímetro Cefálico (cm)</label>
                 <input type="number" step="0.1" min="20" max="45" className="input"
                   placeholder="ex: 34.0"
                   value={form.birth_head_circ}
@@ -1741,6 +1758,15 @@ export default function PacienteDetailPage() {
 
   useEffect(() => { loadPatient() }, [id])
 
+  // Marca como visto pelo médico ao abrir o paciente
+  useEffect(() => {
+    if (id) {
+      supabase.from('patients')
+        .update({ last_doctor_seen_at: new Date().toISOString() })
+        .eq('id', id)
+    }
+  }, [id])
+
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <Loader2 size={28} className="animate-spin text-blue-500" />
@@ -1836,14 +1862,22 @@ export default function PacienteDetailPage() {
 
           <div className="p-6">
           <div className="max-w-3xl mx-auto">
-            {activeTab === 'cadastro'  && <TabCadastro  patient={patient} onUpdate={loadPatient} />}
-            {activeTab === 'diario'    && <TabDiario    patient={patient} />}
-            {activeTab === 'fezes'     && <TabFezes     patient={patient} />}
-            {activeTab === 'graficos'  && <TabGraficos  patient={patient} />}
-            {activeTab === 'receitas'  && <TabReceitas  patient={patient} />}
-            {activeTab === 'dicas'     && <TabDicas     patient={patient} />}
-            {activeTab === 'marcos'    && <TabMarcos    birthdate={patient.birthdate} />}
-            {activeTab === 'vacinas'   && <TabVacinas   birthdate={patient.birthdate} />}
+            {activeTab === 'cadastro'       && <TabCadastro      patient={patient} onUpdate={loadPatient} />}
+            {activeTab === 'diario'         && <TabDiario        patient={patient} />}
+            {activeTab === 'fezes'          && <TabFezes         patient={patient} />}
+            {activeTab === 'graficos'       && <TabGraficos      patient={patient} />}
+            {activeTab === 'receitas'       && <TabReceitas      patient={patient} />}
+            {activeTab === 'dicas'          && <TabDicas         patient={patient} />}
+            {activeTab === 'marcos'         && <TabMarcos        birthdate={patient.birthdate} />}
+            {activeTab === 'vacinas'        && <TabVacinas       birthdate={patient.birthdate} />}
+            {activeTab === 'sintomas'       && <TabSintomas      patient={patient} />}
+            {activeTab === 'sono'           && <TabSono          patient={patient} />}
+            {activeTab === 'amamentacao'    && <TabAmamentacao   patient={patient} />}
+            {activeTab === 'idadecorrigida' && <TabIdadeCorrigida patient={patient} />}
+            {activeTab === 'alertas'        && <TabAlertas />}
+            {activeTab === 'documentos'     && <TabDocumentos    patient={patient} />}
+            {activeTab === 'calculadora'    && <TabCalculadora />}
+            {activeTab === 'faq'            && <TabFAQ />}
           </div>
           </div>
         </div>

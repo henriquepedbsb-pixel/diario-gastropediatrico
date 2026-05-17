@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { markPatientActivity } from '../lib/utils'
 import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -10,8 +11,16 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import TabMarcos  from '../components/paciente/TabMarcos'
-import TabVacinas from '../components/paciente/TabVacinas'
+import TabMarcos        from '../components/paciente/TabMarcos'
+import TabVacinas       from '../components/paciente/TabVacinas'
+import TabSintomas      from '../components/paciente/TabSintomas'
+import TabSono          from '../components/paciente/TabSono'
+import TabAmamentacao   from '../components/paciente/TabAmamentacao'
+import TabIdadeCorrigida from '../components/paciente/TabIdadeCorrigida'
+import TabAlertas       from '../components/paciente/TabAlertas'
+import TabDocumentos    from '../components/paciente/TabDocumentos'
+import TabCalculadora   from '../components/paciente/TabCalculadora'
+import TabFAQ           from '../components/paciente/TabFAQ'
 
 /* ─── helpers ─── */
 
@@ -152,6 +161,7 @@ function TabRefeicoes({ patient }) {
       setModal(false)
       resetForm()
       load()
+      markPatientActivity(patient.id)
     }
   }
 
@@ -560,7 +570,7 @@ function TabFezes({ patient }) {
     })
     setSaving(false)
     if (error) { setSaveErro(error.message) }
-    else { setModal(false); resetForm(); load() }
+    else { setModal(false); resetForm(); load(); markPatientActivity(patient.id) }
   }
 
   const del = async (id) => {
@@ -833,7 +843,7 @@ function SemPacienteScreen({ profile }) {
           <p className="font-semibold">📋 Próximos passos</p>
           <p className="leading-relaxed">
             Assim que o médico aprovar, clique em <strong>Verificar aprovação</strong> ou recarregue
-            a página para acessar o diário do seu filho.
+            a página para acessar o diário do seu filho(a).
           </p>
         </div>
         <button
@@ -905,7 +915,7 @@ function SemPacienteScreen({ profile }) {
           </div>
           <p className="font-bold text-slate-800 text-xl">Solicitar cadastro</p>
           <p className="text-sm text-slate-500 mt-1 leading-relaxed max-w-xs mx-auto">
-            Preencha os dados do seu filho. O Dr. Henrique Gomes receberá uma notificação para aprovar.
+            Preencha os dados do seu filho(a). O Dr. Henrique Gomes receberá uma notificação para aprovar.
           </p>
         </div>
 
@@ -1016,6 +1026,7 @@ function TagInputCad({ tags, onChange }) {
 }
 
 function TabCadastroPai({ patient, onUpdate }) {
+  const navigate = useNavigate()
   /* Parse notes JSON */
   let nd = {}
   if (patient.notes) { try { nd = JSON.parse(patient.notes) } catch { nd = { notas: patient.notes } } }
@@ -1155,6 +1166,14 @@ function TabCadastroPai({ patient, onUpdate }) {
   /* ── Modo exibição ── */
   if (!editing) return (
     <div className="space-y-4 max-w-2xl mx-auto">
+
+      {/* Botão retornar */}
+      <button
+        onClick={() => navigate('/diario?tab=refeicoes')}
+        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-blue-600 font-medium px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+      >
+        ← Retornar ao menu principal
+      </button>
 
       {/* Foto do paciente */}
       <div className="card p-5">
@@ -1334,7 +1353,7 @@ function TabCadastroPai({ patient, onUpdate }) {
                 onChange={e => setForm(f => ({ ...f, birth_height: e.target.value }))} />
             </div>
             <div>
-              <label className="label">PC (cm)</label>
+              <label className="label">Perímetro Cefálico (cm)</label>
               <input type="number" step="0.1" min="20" max="45" className="input"
                 placeholder="ex: 34.0"
                 value={form.birth_head_circ}
@@ -1363,7 +1382,7 @@ function TabCadastroPai({ patient, onUpdate }) {
         <div>
           <label className="label">Observações sobre a criança</label>
           <textarea className="input resize-none" rows={3}
-            placeholder="Informações relevantes sobre o seu filho…"
+            placeholder="Informações relevantes sobre o seu filho(a)…"
             value={form.notas}
             onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} />
         </div>
@@ -1452,13 +1471,21 @@ export default function DiarioPage() {
       {/* Conteúdo principal — largura total */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl mx-auto">
-          {tab === 'cadastro'  && <TabCadastroPai patient={paciente} onUpdate={refreshPaciente} />}
-          {tab === 'refeicoes' && <TabRefeicoes  patient={paciente} />}
-          {tab === 'fezes'     && <TabFezes      patient={paciente} />}
-          {tab === 'receitas'  && <TabReceitas   patient={paciente} />}
-          {tab === 'dicas'     && <TabDicas />}
-          {tab === 'marcos'    && <TabMarcos   birthdate={paciente.birthdate} />}
-          {tab === 'vacinas'   && <TabVacinas  birthdate={paciente.birthdate} />}
+          {tab === 'cadastro'       && <TabCadastroPai    patient={paciente} onUpdate={refreshPaciente} />}
+          {tab === 'refeicoes'      && <TabRefeicoes      patient={paciente} />}
+          {tab === 'fezes'          && <TabFezes          patient={paciente} />}
+          {tab === 'receitas'       && <TabReceitas       patient={paciente} />}
+          {tab === 'dicas'          && <TabDicas />}
+          {tab === 'marcos'         && <TabMarcos         birthdate={paciente.birthdate} />}
+          {tab === 'vacinas'        && <TabVacinas        birthdate={paciente.birthdate} />}
+          {tab === 'sintomas'       && <TabSintomas       patient={paciente} />}
+          {tab === 'sono'           && <TabSono           patient={paciente} />}
+          {tab === 'amamentacao'    && <TabAmamentacao    patient={paciente} />}
+          {tab === 'idadecorrigida' && <TabIdadeCorrigida patient={paciente} />}
+          {tab === 'alertas'        && <TabAlertas />}
+          {tab === 'documentos'     && <TabDocumentos     patient={paciente} />}
+          {tab === 'calculadora'    && <TabCalculadora />}
+          {tab === 'faq'            && <TabFAQ />}
         </div>
       </div>
     </div>

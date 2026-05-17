@@ -5,7 +5,7 @@ import {
   FileText, Lightbulb, TrendingUp,
   ChevronRight, Activity, Clock, Bell, CheckCircle, XCircle, Loader2,
 } from 'lucide-react'
-import { differenceInMonths, differenceInYears, parseISO, format } from 'date-fns'
+import { differenceInMonths, differenceInYears, parseISO, format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '../lib/supabase'
 
@@ -69,14 +69,29 @@ function PatientCard({ patient, onClick }) {
     ? patient.allergies
     : patient.allergies ? patient.allergies.split(',').map(a => a.trim()) : []
 
+  const hasNewActivity = patient.last_activity_at && (
+    !patient.last_doctor_seen_at ||
+    new Date(patient.last_activity_at) > new Date(patient.last_doctor_seen_at)
+  )
+  const activityAgo = patient.last_activity_at
+    ? formatDistanceToNow(new Date(patient.last_activity_at), { locale: ptBR, addSuffix: true })
+    : null
+
   return (
     <button
       onClick={onClick}
-      className="card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:scale-[0.98]"
+      className={`card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:scale-[0.98] ${
+        hasNewActivity ? 'ring-2 ring-orange-300 ring-offset-1' : ''
+      }`}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 font-bold text-lg ${cor}`}>
-          {initials}
+        <div className="relative shrink-0">
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${cor}`}>
+            {initials}
+          </div>
+          {hasNewActivity && (
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-400 rounded-full border-2 border-white" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-slate-800 truncate">{patient.name}</p>
@@ -84,21 +99,27 @@ function PatientCard({ patient, onClick }) {
             {calcAge(patient.birthdate)}
             {patient.gender === 'M' ? ' · Masculino' : patient.gender === 'F' ? ' · Feminino' : ''}
           </p>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            {patient.blood_type && (
-              <span className="text-xs bg-red-50 text-red-600 font-semibold px-1.5 py-0.5 rounded">
-                {patient.blood_type}
-              </span>
-            )}
-            {allergies.slice(0, 2).map(a => (
-              <span key={a} className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded">
-                {a}
-              </span>
-            ))}
-            {allergies.length > 2 && (
-              <span className="text-xs text-slate-400">+{allergies.length - 2}</span>
-            )}
-          </div>
+          {hasNewActivity ? (
+            <p className="text-xs text-orange-500 font-medium mt-0.5">
+              🔔 Nova atividade {activityAgo}
+            </p>
+          ) : (
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+              {patient.blood_type && (
+                <span className="text-xs bg-red-50 text-red-600 font-semibold px-1.5 py-0.5 rounded">
+                  {patient.blood_type}
+                </span>
+              )}
+              {allergies.slice(0, 2).map(a => (
+                <span key={a} className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded">
+                  {a}
+                </span>
+              ))}
+              {allergies.length > 2 && (
+                <span className="text-xs text-slate-400">+{allergies.length - 2}</span>
+              )}
+            </div>
+          )}
         </div>
         <ChevronRight size={16} className="text-slate-300 shrink-0" />
       </div>
@@ -131,7 +152,7 @@ export default function HomePage() {
         { data: latestTips },
         { data: reqs },
       ] = await Promise.all([
-        supabase.from('patients').select('id, name, birthdate, gender, blood_type, allergies').order('name'),
+        supabase.from('patients').select('*').order('name'),
         supabase.from('prescriptions').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('tips').select('id', { count: 'exact', head: true }).eq('is_published', true),
         supabase.from('tips')
@@ -145,7 +166,15 @@ export default function HomePage() {
           .order('created_at', { ascending: false }),
       ])
 
-      setPatients(pats ?? [])
+      // Pacientes com nova atividade sobem para o topo
+      const sorted = (pats ?? []).sort((a, b) => {
+        const aNew = a.last_activity_at && (!a.last_doctor_seen_at || new Date(a.last_activity_at) > new Date(a.last_doctor_seen_at))
+        const bNew = b.last_activity_at && (!b.last_doctor_seen_at || new Date(b.last_activity_at) > new Date(b.last_doctor_seen_at))
+        if (aNew && !bNew) return -1
+        if (!aNew && bNew) return 1
+        return (a.name ?? '').localeCompare(b.name ?? '')
+      })
+      setPatients(sorted)
       setPrescCount(presc ?? 0)
       setTipsCount(tips ?? 0)
       setRecentTips(latestTips ?? [])

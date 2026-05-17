@@ -1,3 +1,13 @@
+import { supabase } from './supabase'
+
+/* Marca atividade do responsável no paciente (substitui trigger do banco) */
+export const markPatientActivity = (patientId) => {
+  supabase.from('patients')
+    .update({ last_activity_at: new Date().toISOString() })
+    .eq('id', patientId)
+    .then(() => {}) // fire and forget
+}
+
 /* ── Helpers de verificação de role ──
    Banco armazena: 'doctor' | 'parent'
    App usa internamente: 'medico' | 'pai'
