@@ -101,7 +101,7 @@ export default function Sidebar({ onClose }) {
   const patientId    = patientMatch?.[1] ?? null
   const isDiario     = location.pathname === '/diario'
 
-  const activeTab = new URLSearchParams(location.search).get('tab') || 'cadastro'
+  const activeTab = new URLSearchParams(location.search).get('tab') || 'resumo'
 
   const goTabDoctor = (tabId) => { navigate(`/dashboard/pacientes/${patientId}?tab=${tabId}`); onClose?.() }
   const goTabParent = (tabId) => { navigate(`/diario?tab=${tabId}`); onClose?.() }

@@ -1577,9 +1577,9 @@ function TabResumo({ patient, onNavigate }) {
             {data.meal.meal_type ?? 'Refeição'}
           </p>
           <p className="text-xs text-slate-500 truncate">{data.meal.description ?? '—'}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.meal.eaten_at)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.meal.eaten_at)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum registro</p>,
     },
     {
       tab:   'fezes',
@@ -1593,9 +1593,9 @@ function TabResumo({ patient, onNavigate }) {
             Tipo {data.stool.bristol_type} · {BRISTOL_RESUMO[data.stool.bristol_type]}
           </p>
           <p className="text-xs text-slate-500 capitalize">{data.stool.color ?? ''}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.stool.recorded_at)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.stool.recorded_at)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum registro</p>,
     },
     {
       tab:   'sintomas',
@@ -1609,9 +1609,9 @@ function TabResumo({ patient, onNavigate }) {
             {Array.isArray(data.symp.symptoms) ? data.symp.symptoms.slice(0,2).join(', ') : '—'}
           </p>
           <p className="text-xs text-slate-500 capitalize">Severidade: {data.symp.severity ?? '—'}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.symp.recorded_at)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.symp.recorded_at)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum registro</p>,
     },
     {
       tab:   'sono',
@@ -1625,9 +1625,9 @@ function TabResumo({ patient, onNavigate }) {
             {data.sleep.duration_minutes ? `${Math.round(data.sleep.duration_minutes / 60 * 10) / 10}h` : '—'}
           </p>
           <p className="text-xs text-slate-500 capitalize">Qualidade: {data.sleep.quality ?? '—'}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.sleep.sleep_start)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.sleep.sleep_start)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum registro</p>,
     },
     {
       tab:   'amamentacao',
@@ -1641,9 +1641,9 @@ function TabResumo({ patient, onNavigate }) {
             {data.bf.duration_minutes ? `${data.bf.duration_minutes} min` : '—'}
           </p>
           <p className="text-xs text-slate-500 capitalize">{data.bf.side ?? ''}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.bf.recorded_at)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.bf.recorded_at)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum registro</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum registro</p>,
     },
     {
       tab:   'medicamentos',
@@ -1661,7 +1661,7 @@ function TabResumo({ patient, onNavigate }) {
             {data.meds.length > 2 ? ` +${data.meds.length - 2}` : ''}
           </p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum ativo</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum ativo</p>,
     },
     {
       tab:   'introducao',
@@ -1678,9 +1678,9 @@ function TabResumo({ patient, onNavigate }) {
             : 'text-slate-500'}`}>
             {data.food.reaction ?? '—'}
           </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.food.introduced_at)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.food.introduced_at)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum alimento</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum alimento</p>,
     },
     {
       tab:   'choro',
@@ -1696,33 +1696,33 @@ function TabResumo({ patient, onNavigate }) {
           <p className="text-xs text-slate-500">
             Último: {data.crying[0].intensity ?? '—'} · {data.crying[0].duration_min ? `${data.crying[0].duration_min} min` : ''}
           </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{ago(data.crying[0].recorded_at)}</p>
+          <p className="text-xs text-slate-400 mt-1">{ago(data.crying[0].recorded_at)}</p>
         </>
-      ) : <p className="text-xs text-slate-400">Nenhum episódio</p>,
+      ) : <p className="text-sm text-slate-400">Nenhum episódio</p>,
     },
   ]
 
   return (
     <div className="space-y-5">
       {/* Saudação */}
-      <div className="card p-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0">
-        <p className="text-xs font-medium opacity-80 mb-0.5">Visão geral do diário</p>
-        <p className="text-lg font-bold leading-snug">{patient.name}</p>
-        <p className="text-sm opacity-80">{calcIdade(patient.birthdate)}</p>
+      <div className="card p-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0">
+        <p className="text-xs font-medium opacity-80 mb-1">Visão geral do diário</p>
+        <p className="text-2xl font-bold leading-snug">{patient.name}</p>
+        <p className="text-sm opacity-80 mt-0.5">{calcIdade(patient.birthdate)}</p>
       </div>
 
       {/* Grid de cards */}
       <div className="grid grid-cols-2 gap-3">
         {cards.map(card => (
           <button key={card.tab} onClick={() => onNavigate(card.tab)}
-            className={`card p-3.5 text-left border-l-4 ${card.cor} hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.98]`}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${card.iconCor}`}>
+            className={`card p-4 text-left border-l-4 ${card.cor} hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.98]`}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${card.iconCor}`}>
                 {card.emoji}
               </span>
-              <span className="text-xs font-semibold text-slate-600">{card.title}</span>
+              <span className="text-sm font-semibold text-slate-700 leading-tight">{card.title}</span>
             </div>
-            <div className="space-y-0.5">
+            <div className="space-y-1 min-h-[3.5rem]">
               {card.content}
             </div>
           </button>
@@ -1730,7 +1730,7 @@ function TabResumo({ patient, onNavigate }) {
       </div>
 
       {/* Atalho rápido */}
-      <div className="card p-4 border-dashed border-slate-300 bg-slate-50/50 text-center">
+      <div className="card p-3 border-dashed border-slate-200 bg-slate-50/50 text-center">
         <p className="text-xs text-slate-400">Toque em qualquer card para abrir a seção completa</p>
       </div>
     </div>
