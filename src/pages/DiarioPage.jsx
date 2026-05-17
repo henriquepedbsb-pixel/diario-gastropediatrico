@@ -471,6 +471,25 @@ function TabDicas() {
         </div>
       )}
 
+      {/* dica fixa — treinamento evacuatório */}
+      <div className="card p-4 border-blue-200 bg-blue-50 space-y-3">
+        <h3 className="font-semibold text-blue-800 text-sm">💡 Orientações para melhorar a evacuação</h3>
+        <ul className="space-y-2 text-sm text-blue-700">
+          <li className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">🪑</span>
+            <span>Use banco ou escada para apoio dos pés (calcanhar apoiado) e tampa redutora de assento para o vaso sanitário.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">⏰</span>
+            <span>Estabeleça um horário fixo para evacuar — geralmente 20–30 minutos após o jantar, mesmo que a criança não sinalize vontade. Se sinalizar antes ou depois, encaminhe-a ao banheiro.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">📵</span>
+            <span>Sem celular nem distrações. A criança precisa ter consciência do que está fazendo. Não espere mais de 5 minutos. Não brigue — incentive dizendo que na próxima vez dará certo.</span>
+          </li>
+        </ul>
+      </div>
+
       {/* alerta fixo */}
       <div className="card p-4 border-red-200 bg-red-50">
         <h3 className="font-semibold text-red-700 text-sm mb-2">🚨 Sinais de alerta — procure atendimento</h3>
@@ -588,6 +607,26 @@ function TabFezes({ patient }) {
 
   return (
     <div className="space-y-4">
+
+      {/* Orientações de treinamento evacuatório */}
+      <div className="card p-4 bg-blue-50 border-blue-200 space-y-3">
+        <h3 className="font-semibold text-blue-800 text-sm">💡 Orientações para melhorar a evacuação</h3>
+        <ul className="space-y-2 text-sm text-blue-700">
+          <li className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">🪑</span>
+            <span>Use banco ou escada para apoio dos pés (calcanhar apoiado) e tampa redutora de assento para o vaso sanitário.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">⏰</span>
+            <span>Estabeleça um horário fixo para evacuar — geralmente 20–30 minutos após o jantar, mesmo que a criança não sinalize vontade. Se sinalizar antes ou depois, encaminhe-a ao banheiro.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">📵</span>
+            <span>Sem celular nem distrações. A criança precisa ter consciência do que está fazendo. Não espere mais de 5 minutos. Não brigue — incentive dizendo que na próxima vez dará certo.</span>
+          </li>
+        </ul>
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">{entries.length} registro{entries.length !== 1 ? 's' : ''}</p>
         <button onClick={() => { resetForm(); setSaveErro(''); setModal(true) }} className="btn-primary">
