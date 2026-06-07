@@ -15,6 +15,7 @@ import ClinicasPage  from './pages/ClinicasPage'
 import DepoimentosPage from './pages/DepoimentosPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+import Relatorio from './pages/Relatorio'
 
 /* ── Redireciona após login baseado no perfil ── */
 function RootRedirect() {
@@ -80,7 +81,8 @@ export default function App() {
             <Route path="/dashboard/pacientes/novo"     element={<NovoPacientePage />} />
             <Route path="/dashboard/pacientes/:id"      element={<PacienteDetailPage />} />
             <Route path="/dashboard/dicas"        element={<DicasPage />} />
-            <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />} />
+            <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />
+            <Route path="/dashboard/relatorio" element={<Relatorio />} />
           </Route>
 
           {/* Visível para todos os autenticados */}
