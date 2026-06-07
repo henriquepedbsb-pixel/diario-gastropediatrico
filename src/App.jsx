@@ -81,7 +81,7 @@ export default function App() {
             <Route path="/dashboard/pacientes/novo"     element={<NovoPacientePage />} />
             <Route path="/dashboard/pacientes/:id"      element={<PacienteDetailPage />} />
             <Route path="/dashboard/dicas"        element={<DicasPage />} />
-            <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />
+            <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />} />
             <Route path="/dashboard/relatorio" element={<Relatorio />} />
           </Route>
 
