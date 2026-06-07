@@ -175,6 +175,13 @@ export default function Sidebar({ onClose }) {
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
               <UserPlus size={17} className="shrink-0" /> Novo Paciente
             </button>
+            <NavLink to="/dashboard/relatorio" onClick={onClose}
+  className={({ isActive }) =>
+    `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+      isActive ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+    }`}>
+  <FileText size={17} className="shrink-0" /> Relatório Pré-Consulta
+</NavLink>
           </div>
         )}
 
