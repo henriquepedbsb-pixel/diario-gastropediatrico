@@ -4,6 +4,7 @@ import {
   Search, UserPlus, Baby, Users,
   FileText, Lightbulb, TrendingUp,
   ChevronRight, Activity, Clock, Bell, CheckCircle, XCircle, Loader2,
+  Lock,
 } from 'lucide-react'
 import { differenceInMonths, differenceInYears, parseISO, format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -17,7 +18,6 @@ function saudacao() {
 }
 import { useAuth } from '../contexts/AuthContext'
 
-/* ── Calcula idade legível ── */
 function calcAge(birthdate) {
   if (!birthdate) return '—'
   const birth  = parseISO(birthdate)
@@ -28,19 +28,16 @@ function calcAge(birthdate) {
   return `${years} ${years === 1 ? 'ano' : 'anos'}`
 }
 
-/* ── Cor do avatar por gênero ── */
 const avatarStyle = {
   M: 'bg-blue-100 text-blue-700',
   F: 'bg-pink-100 text-pink-700',
   default: 'bg-slate-100 text-slate-600',
 }
 
-/* ── Skeleton ── */
 function Skeleton({ className = 'h-20' }) {
   return <div className={`card animate-pulse bg-slate-100 ${className}`} />
 }
 
-/* ── Cartão KPI ── */
 function KpiCard({ icon: Icon, label, value, sub, color, onClick }) {
   return (
     <button
@@ -61,7 +58,6 @@ function KpiCard({ icon: Icon, label, value, sub, color, onClick }) {
   )
 }
 
-/* ── Card de paciente ── */
 function PatientCard({ patient, onClick, onClearBadge }) {
   const cor      = avatarStyle[patient.gender] ?? avatarStyle.default
   const initials = patient.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -127,15 +123,11 @@ function PatientCard({ patient, onClick, onClearBadge }) {
   )
 }
 
-/* ═══════════════════════════════════════════
-   PÁGINA PRINCIPAL
-═══════════════════════════════════════════ */
 export default function HomePage() {
   const navigate  = useNavigate()
   const location  = useLocation()
   const { profile } = useAuth()
 
-  // Notificação push em tempo real via Supabase Realtime
   useEffect(() => {
     if (Notification.permission === 'default') Notification.requestPermission()
 
@@ -160,14 +152,15 @@ export default function HomePage() {
     return () => supabase.removeChannel(channel)
   }, [])
 
-  const [patients,     setPatients]     = useState([])
-  const [prescCount,   setPrescCount]   = useState(null)
-  const [tipsCount,    setTipsCount]    = useState(null)
-  const [recentTips,   setRecentTips]   = useState([])
-  const [pendingReqs,  setPendingReqs]  = useState([])
-  const [approvingId,  setApprovingId]  = useState(null)
-  const [loading,      setLoading]      = useState(true)
-  const [search,       setSearch]       = useState('')
+  const [patients,      setPatients]      = useState([])
+  const [prescCount,    setPrescCount]    = useState(null)
+  const [tipsCount,     setTipsCount]     = useState(null)
+  const [recentTips,    setRecentTips]    = useState([])
+  const [pendingReqs,   setPendingReqs]   = useState([])
+  const [privateNotes,  setPrivateNotes]  = useState([])
+  const [approvingId,   setApprovingId]   = useState(null)
+  const [loading,       setLoading]       = useState(true)
+  const [search,        setSearch]        = useState('')
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -192,7 +185,6 @@ export default function HomePage() {
           .order('created_at', { ascending: false }),
       ])
 
-      // Pacientes com nova atividade sobem para o topo
       const sorted = (pats ?? []).sort((a, b) => {
         const aNew = a.last_activity_at && (!a.last_doctor_seen_at || new Date(a.last_activity_at) > new Date(a.last_doctor_seen_at))
         const bNew = b.last_activity_at && (!b.last_doctor_seen_at || new Date(b.last_activity_at) > new Date(b.last_doctor_seen_at))
@@ -206,6 +198,15 @@ export default function HomePage() {
       setRecentTips(latestTips ?? [])
       setPendingReqs(reqs ?? [])
       setLoading(false)
+
+      // Notas privativas — query separada; se a tabela ainda não existir ou falhar,
+      // não deve derrubar o resto da home (fail silencioso e controlado)
+      const { data: notes, error: notesErr } = await supabase
+        .from('private_clinical_notes')
+        .select('id, content, created_at, patient_id, patients(name)')
+        .order('created_at', { ascending: false })
+        .limit(3)
+      if (!notesErr) setPrivateNotes(notes ?? [])
     }
 
     fetchAll()
@@ -215,11 +216,9 @@ export default function HomePage() {
     p.name?.toLowerCase().includes(search.toLowerCase())
   )
 
-  /* ── Aprovar solicitação de cadastro ── */
   const approveRequest = async (req) => {
     setApprovingId(req.id)
     try {
-      // 1. Cria o paciente vinculado ao responsável
       const { data: patient, error: patErr } = await supabase
         .from('patients')
         .insert({
@@ -234,13 +233,11 @@ export default function HomePage() {
         .single()
       if (patErr) throw patErr
 
-      // 2. Marca solicitação como aprovada
       await supabase
         .from('patient_requests')
         .update({ status: 'approved', reviewed_at: new Date().toISOString() })
         .eq('id', req.id)
 
-      // 3. Atualiza estado local
       setPendingReqs(prev => prev.filter(r => r.id !== req.id))
       setPatients(prev => [...prev, patient].sort((a, b) => a.name.localeCompare(b.name)))
     } catch (err) {
@@ -251,7 +248,6 @@ export default function HomePage() {
     }
   }
 
-  /* ── Rejeitar solicitação ── */
   const rejectRequest = async (req) => {
     await supabase
       .from('patient_requests')
@@ -260,7 +256,6 @@ export default function HomePage() {
     setPendingReqs(prev => prev.filter(r => r.id !== req.id))
   }
 
-  /* ── Dicas: metadados de categoria ── */
   const CAT = {
     nutrition: { emoji: '🥗', label: 'Nutrição'    },
     growth:    { emoji: '📏', label: 'Crescimento' },
@@ -273,7 +268,7 @@ export default function HomePage() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
 
-      {/* ── Boas-vindas ── */}
+      {/* Boas-vindas */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="page-title">
@@ -288,7 +283,7 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* ── Solicitações de cadastro pendentes ── */}
+      {/* Solicitações de cadastro pendentes */}
       {!loading && pendingReqs.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
@@ -302,7 +297,6 @@ export default function HomePage() {
               </span>
             </h2>
           </div>
-
           <div className="space-y-3">
             {pendingReqs.map(req => (
               <div key={req.id} className="card p-4 border-l-4 border-amber-400 bg-amber-50/30">
@@ -327,7 +321,6 @@ export default function HomePage() {
                       </p>
                     )}
                   </div>
-
                   <div className="flex flex-col sm:flex-row gap-2 shrink-0">
                     <button
                       onClick={() => rejectRequest(req)}
@@ -353,7 +346,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── KPIs ── */}
+      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {loading ? (
           [1,2,3].map(i => <Skeleton key={i} className="h-24" />)
@@ -386,7 +379,67 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ── Acesso rápido ── */}
+      {/* Diário Privativo */}
+      {!loading && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
+                <Lock size={15} className="text-violet-600" />
+              </div>
+              <h2 className="section-header">Diário Privativo</h2>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/diario-privativo')}
+              className="text-xs font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1"
+            >
+              Ver tudo <ChevronRight size={13} />
+            </button>
+          </div>
+
+          {privateNotes.length === 0 ? (
+            <button
+              onClick={() => navigate('/dashboard/diario-privativo')}
+              className="card w-full p-5 text-center hover:shadow-sm hover:border-violet-200 transition-all border-dashed"
+            >
+              <Lock size={20} className="mx-auto mb-2 text-violet-300" />
+              <p className="text-sm text-slate-500">Nenhuma anotação clínica ainda</p>
+              <p className="text-xs text-violet-600 font-medium mt-1">+ Nova anotação</p>
+            </button>
+          ) : (
+            <div className="space-y-2">
+              {privateNotes.map(note => (
+                <button
+                  key={note.id}
+                  onClick={() => navigate('/dashboard/diario-privativo')}
+                  className="card w-full p-3.5 flex items-start gap-3 text-left hover:shadow-sm hover:border-violet-200 transition-all"
+                >
+                  <div className="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <Lock size={13} className="text-violet-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-violet-700 mb-0.5">
+                      {note.patients?.name || '—'}
+                    </p>
+                    <p className="text-sm text-slate-600 truncate">{note.content}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {formatDistanceToNow(new Date(note.created_at), { locale: ptBR, addSuffix: true })}
+                    </p>
+                  </div>
+                </button>
+              ))}
+              <button
+                onClick={() => navigate('/dashboard/diario-privativo')}
+                className="w-full text-center text-xs text-violet-600 hover:text-violet-700 font-medium py-2 hover:bg-violet-50 rounded-lg transition-colors"
+              >
+                + Nova anotação
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Acesso rápido */}
       <div>
         <h2 className="section-header mb-3">Acesso rápido</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -431,7 +484,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── Dicas recentes ── */}
+      {/* Dicas recentes */}
       {(loading || recentTips.length > 0) && (
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -478,7 +531,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── Lista de pacientes ── */}
+      {/* Lista de pacientes */}
       <div id="sec-pacientes">
         <div className="flex items-center justify-between mb-3">
           <h2 className="section-header">
@@ -491,7 +544,6 @@ export default function HomePage() {
           </h2>
         </div>
 
-        {/* Busca */}
         <div className="relative mb-4">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
