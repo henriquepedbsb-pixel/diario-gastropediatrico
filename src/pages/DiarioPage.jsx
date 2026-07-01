@@ -7,7 +7,7 @@ import {
   UtensilsCrossed, FileText, Lightbulb, Droplets,
   Plus, Trash2, Loader2, Baby, X, Upload, Paperclip,
   Milestone, Syringe, Clock, Send, CheckCircle, XCircle,
-  ClipboardList, Pencil, Check, Camera,
+  ClipboardList, Pencil, Check, Camera, FileSearch,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -26,7 +26,7 @@ import TabFraldas            from '../components/paciente/TabFraldas'
 import TabIntroducaoAlimentar from '../components/paciente/TabIntroducaoAlimentar'
 import TabMedicamentos       from '../components/paciente/TabMedicamentos'
 import TabChoro              from '../components/paciente/TabChoro'
-import TabTimeline           from '../components/paciente/TabTimeline'
+import TabExamesFamilia      from '../components/paciente/TabExamesFamilia'
 
 /* ─── helpers ─── */
 
@@ -1851,7 +1851,7 @@ export default function DiarioPage() {
           {tab === 'introducao'     && <TabIntroducaoAlimentar patient={paciente} />}
           {tab === 'choro'          && <TabChoro               patient={paciente} />}
           {tab === 'graficosfezes'  && <TabIntestinal          patient={paciente} />}
-          {tab === 'timeline'       && <TabTimeline            patient={paciente} />}
+          {tab === 'exames'         && <TabExamesFamilia       patient={paciente} />}
         </div>
       </div>
     </div>
