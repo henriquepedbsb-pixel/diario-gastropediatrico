@@ -83,6 +83,28 @@ export function useExames() {
     if (error) throw new Error(`Falha ao salvar revisão: ${error.message}`)
   }, [])
 
+  const apagarExame = useCallback(async (exame) => {
+    if (!exame?.id) throw new Error('Exame inválido.')
+
+    // 1. Remove o arquivo do Storage (ignora se já não existir)
+    if (exame.file_path) {
+      const { error: stErr } = await supabase
+        .storage.from('exames-pacientes')
+        .remove([exame.file_path])
+      // Não interrompe se o arquivo já foi removido — segue para apagar o registro
+      if (stErr && !/not found/i.test(stErr.message)) {
+        throw new Error(`Falha ao remover arquivo: ${stErr.message}`)
+      }
+    }
+
+    // 2. Remove o registro do banco
+    const { error: delErr } = await supabase
+      .from('exam_records')
+      .delete()
+      .eq('id', exame.id)
+    if (delErr) throw new Error(`Falha ao apagar exame: ${delErr.message}`)
+  }, [])
+
   const getUrlArquivo = useCallback(async (filePath) => {
     const { data, error } = await supabase
       .storage.from('exames-pacientes')
@@ -91,5 +113,5 @@ export function useExames() {
     return data.signedUrl
   }, [])
 
-  return { exames, loading, erro, fetchExames, uploadExame, reprocessar, salvarRevisao, getUrlArquivo }
+  return { exames, loading, erro, fetchExames, uploadExame, reprocessar, salvarRevisao, apagarExame, getUrlArquivo }
 }
