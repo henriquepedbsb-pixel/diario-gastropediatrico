@@ -5,6 +5,7 @@ import {
   Milestone, Syringe, BookUser, MessageSquareQuote,
   AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen,
   HelpCircle, MapPin, History, Sprout, Pill, Frown, Lightbulb, LayoutDashboard,
+  FileSearch, Lock,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { isDoctor } from '../../lib/utils'
@@ -30,6 +31,7 @@ const DOCTOR_TABS = [
   { id: 'sono',           label: 'Sono',              icon: Moon            },
   { id: 'choro',          label: 'Choro / Cólica',   icon: Frown           },
   { id: 'medicamentos',   label: 'Medicamentos',      icon: Pill            },
+  { id: 'exames',         label: 'Exames',            icon: FileSearch      },
 
   H('Acompanhamento Clínico'),
   { id: 'vacinas',        label: 'Vacinas',           icon: Syringe         },
@@ -182,6 +184,20 @@ export default function Sidebar({ onClose }) {
     }`}>
   <FileText size={17} className="shrink-0" /> Relatório Pré-Consulta
 </NavLink>
+            <NavLink to="/dashboard/exames" onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+                }`}>
+              <FileSearch size={17} className="shrink-0" /> Exames
+            </NavLink>
+            <NavLink to="/dashboard/diario-privativo" onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-100'
+                }`}>
+              <Lock size={17} className="shrink-0" /> Diário Privativo
+            </NavLink>
           </div>
         )}
 
