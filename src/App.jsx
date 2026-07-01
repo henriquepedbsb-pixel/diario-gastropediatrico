@@ -16,6 +16,8 @@ import DepoimentosPage from './pages/DepoimentosPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import Relatorio from './pages/Relatorio'
+import Exames from './pages/Exames'
+import DiarioPrivativo from './pages/DiarioPrivativo'
 
 /* ── Redireciona após login baseado no perfil ── */
 function RootRedirect() {
@@ -83,6 +85,8 @@ export default function App() {
             <Route path="/dashboard/dicas"        element={<DicasPage />} />
             <Route path="/dashboard/depoimentos"  element={<DepoimentosPage />} />
             <Route path="/dashboard/relatorio" element={<Relatorio />} />
+            <Route path="/dashboard/exames" element={<Exames />} />
+            <Route path="/dashboard/diario-privativo" element={<DiarioPrivativo />} />
           </Route>
 
           {/* Visível para todos os autenticados */}
