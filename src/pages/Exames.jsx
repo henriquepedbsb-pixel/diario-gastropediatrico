@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { FileSearch, Users, Upload, Loader2, AlertCircle, FileText, Image as ImageIcon, RefreshCw } from 'lucide-react'
+import { FileSearch, Users, Upload, Loader2, AlertCircle, FileText, Image as ImageIcon, RefreshCw, Trash2 } from 'lucide-react'
 import { useExames } from '../hooks/useExames'
 import ExameReviewModal from '../components/exames/ExameReviewModal'
 import { supabase } from '../lib/supabase'
@@ -22,9 +22,10 @@ export default function Exames() {
   const [enviando,   setEnviando]   = useState(false)
   const [erroUpload, setErroUpload] = useState(null)
   const [modalExame, setModalExame] = useState(null)
+  const [apagandoId, setApagandoId] = useState(null)
   const fileInputRef = useRef(null)
 
-  const { exames, loading, erro, fetchExames, uploadExame } = useExames()
+  const { exames, loading, erro, fetchExames, uploadExame, apagarExame } = useExames()
 
   useEffect(() => {
     async function fetchPacientes() {
@@ -56,6 +57,23 @@ export default function Exames() {
     } finally {
       setEnviando(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  async function handleApagar(e, exame) {
+    e.stopPropagation() // evita abrir o modal de revisão ao clicar na lixeira
+    const ok = window.confirm(
+      `Apagar este exame? Esta ação remove o arquivo e a transcrição permanentemente e não pode ser desfeita.`
+    )
+    if (!ok) return
+    setApagandoId(exame.id)
+    try {
+      await apagarExame(exame)
+      await fetchExames(pacienteId)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setApagandoId(null)
     }
   }
 
@@ -127,10 +145,12 @@ export default function Exames() {
               exames.map(ex => {
                 const badge = STATUS_BADGE[ex.status] || STATUS_BADGE.uploaded
                 const Icon  = ex.file_type === 'pdf' ? FileText : ImageIcon
+                const apagando = apagandoId === ex.id
                 return (
-                  <button key={ex.id} onClick={() => setModalExame(ex)}
-                    className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-sky-300 transition-colors flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div key={ex.id}
+                    className="w-full bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3">
+                    <button onClick={() => setModalExame(ex)}
+                      className="flex items-center gap-3 min-w-0 flex-1 text-left hover:opacity-80 transition-opacity">
                       <Icon className="w-5 h-5 text-slate-400 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-slate-800 truncate">
@@ -138,13 +158,22 @@ export default function Exames() {
                         </p>
                         <p className="text-xs text-slate-400">{fmtBR(ex.exam_date)}</p>
                       </div>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {ex.status === 'processing' && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />}
                       {ex.status === 'error' && <RefreshCw className="w-3.5 h-3.5 text-red-500" />}
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${badge.cls}`}>{badge.label}</span>
+                      <button
+                        onClick={(e) => handleApagar(e, ex)}
+                        disabled={apagando}
+                        title="Apagar exame"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50">
+                        {apagando
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <Trash2 className="w-4 h-4" />}
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 )
               })
             )}
