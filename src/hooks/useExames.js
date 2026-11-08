@@ -1,14 +1,24 @@
 import { useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
+/* crypto.randomUUID só existe a partir do Safari 15.4 — fallback p/ iOS antigos */
+function novoId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  const b = crypto.getRandomValues(new Uint8Array(16))
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('')
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+}
+
 export function useExames() {
   const [exames,  setExames]  = useState([])
   const [loading, setLoading] = useState(false)
   const [erro,    setErro]    = useState(null)
 
-  const fetchExames = useCallback(async (patientId) => {
+  // silencioso = true → atualiza a lista sem mostrar o "Carregando..." (usado no polling)
+  const fetchExames = useCallback(async (patientId, { silencioso = false } = {}) => {
     if (!patientId) { setExames([]); return }
-    setLoading(true)
+    if (!silencioso) setLoading(true)
     setErro(null)
     try {
       const { data, error } = await supabase
@@ -20,9 +30,9 @@ export function useExames() {
       setExames(data || [])
     } catch (err) {
       setErro(err.message || 'Erro ao buscar exames.')
-      setExames([])
+      if (!silencioso) setExames([])
     } finally {
-      setLoading(false)
+      if (!silencioso) setLoading(false)
     }
   }, [])
 
@@ -34,7 +44,7 @@ export function useExames() {
     if (!isPdf && !isImg) throw new Error('Envie um PDF ou uma foto (JPG/PNG).')
 
     const ext  = isPdf ? 'pdf' : (file.name.split('.').pop() || 'jpg')
-    const path = `${patientId}/${crypto.randomUUID()}.${ext}`
+    const path = `${patientId}/${novoId()}.${ext}`
 
     const { error: upErr } = await supabase
       .storage.from('exames-pacientes')
