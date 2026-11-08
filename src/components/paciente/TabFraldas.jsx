@@ -7,6 +7,7 @@ import {
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { markPatientActivity } from '../../lib/utils'
+import { useUrlsAssinadas, caminhoNoBucket } from '../../lib/arquivosPrivados'
 
 /* ── Ícone de fralda (SVG customizado) ──────────────────── */
 function DiaperIcon({ size = 24, className = '' }) {
@@ -77,7 +78,8 @@ export default function TabFraldas({ patient }) {
   const [saving,   setSaving]   = useState(false)
   const [saveErro, setSaveErro] = useState('')
   const [preview,  setPreview]  = useState(null) // URL de preview da foto selecionada
-  const [lightbox, setLightbox] = useState(null) // foto ampliada
+  const [lightbox, setLightbox] = useState(null) // foto ampliada (URL assinada)
+  const urlsFotos = useUrlsAssinadas('patient-documents', entries.map(e => e.photo_url))
 
   const emptyForm = () => ({
     recorded_at: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -129,8 +131,7 @@ export default function TabFraldas({ patient }) {
         .upload(path, form.file, { contentType: form.file.type })
 
       if (upErr) { setSaveErro(`Erro no upload: ${upErr.message}`); setSaving(false); return }
-      const { data: urlData } = supabase.storage.from('patient-documents').getPublicUrl(upData.path)
-      photo_url = urlData.publicUrl
+      photo_url = upData.path   // bucket privado: guarda o caminho; exibe por URL assinada
     }
 
     const { error } = await supabase.from('diaper_records').insert({
@@ -157,8 +158,8 @@ export default function TabFraldas({ patient }) {
   const del = async (entry) => {
     // remove foto do storage se existir
     if (entry.photo_url) {
-      const match = entry.photo_url.match(/patient-documents\/(.+)$/)
-      if (match) await supabase.storage.from('patient-documents').remove([match[1]])
+      const caminho = caminhoNoBucket('patient-documents', entry.photo_url)
+      if (caminho) await supabase.storage.from('patient-documents').remove([caminho])
     }
     await supabase.from('diaper_records').delete().eq('id', entry.id)
     setEntries(e => e.filter(x => x.id !== entry.id))
@@ -229,10 +230,11 @@ export default function TabFraldas({ patient }) {
 
                       {/* Foto (thumbnail) */}
                       {entry.photo_url ? (
-                        <button onClick={() => setLightbox(entry.photo_url)}
+                        <button onClick={() => urlsFotos[entry.photo_url] && setLightbox(urlsFotos[entry.photo_url])}
                           className="shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-slate-200 hover:opacity-80 transition-opacity">
-                          <img src={entry.photo_url} alt="fralda"
-                            className="w-full h-full object-cover" />
+                          {urlsFotos[entry.photo_url]
+                            ? <img src={urlsFotos[entry.photo_url]} alt="fralda" className="w-full h-full object-cover" />
+                            : <div className="w-full h-full bg-slate-100 animate-pulse" />}
                         </button>
                       ) : (
                         <div className="shrink-0 w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center">
