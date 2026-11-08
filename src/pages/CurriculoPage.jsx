@@ -80,7 +80,7 @@ export default function CurriculoPage() {
   }, [])
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
 
       {/* Cabeçalho */}
       <div className="card p-6 flex flex-col sm:flex-row items-center gap-6">

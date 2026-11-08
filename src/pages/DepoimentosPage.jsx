@@ -70,7 +70,7 @@ export default function DepoimentosPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5">
 
       {/* Avaliações Doctoralia */}
       <div className="card overflow-hidden">
@@ -183,7 +183,7 @@ export default function DepoimentosPage() {
           <p className="text-xs text-slate-400 mt-1">Clique em "Adicionar" para incluir avaliações da Doctoralia.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {lista.map(dep => (
             <div key={dep.id}
               className={`card p-4 flex gap-4 ${!dep.visivel ? 'opacity-50' : ''}`}>

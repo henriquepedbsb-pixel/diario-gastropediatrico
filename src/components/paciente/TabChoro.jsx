@@ -134,7 +134,7 @@ export default function TabChoro({ patient }) {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 px-1">
                 {format(parseISO(dia), "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </p>
-              <div className="space-y-2">
+              <div className="grid gap-3 lg:grid-cols-2 items-start">
                 {itens.map(e => {
                   const im = INTENSIDADES.find(i => i.value === e.intensity)
                   return (

@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
-  Home, UserPlus, Stethoscope, X, LogOut, User,
+  Home, UserPlus, X, LogOut, User,
   ClipboardList, UtensilsCrossed, Droplets, TrendingUp, FileText,
   Milestone, Syringe, BookUser, MessageSquareQuote,
   AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen,
@@ -8,6 +8,7 @@ import {
   FileSearch, Lock,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import BrandMark from './BrandMark'
 import { isDoctor } from '../../lib/utils'
 
 /* ─── helper p/ criar cabeçalho de seção ─── */
@@ -115,7 +116,7 @@ export default function Sidebar({ onClose }) {
     if (item.type === 'header') {
       return (
         <p key={item.label}
-          className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 pt-4 pb-1">
+          className="text-[10px] font-bold text-white/40 uppercase tracking-wider px-3 pt-4 pb-1">
           {item.label}
         </p>
       )
@@ -129,8 +130,8 @@ export default function Sidebar({ onClose }) {
 
     return (
       <button key={item.id} onClick={onClick}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-          isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+          isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
         }`}>
         <Icon size={17} className="shrink-0" />
         <span className="truncate">{item.label}</span>
@@ -142,18 +143,10 @@ export default function Sidebar({ onClose }) {
     <div className="flex flex-col h-full">
 
       {/* ── Logo ── */}
-      <div className="flex items-center justify-between h-16 px-5 border-b border-slate-100 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Stethoscope size={18} className="text-white" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-800 leading-tight">Gastropediatria</p>
-            <p className="text-[10px] text-slate-500 leading-tight">Diário Clínico</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-between h-16 px-4 border-b border-white/10 shrink-0">
+        <BrandMark />
         {onClose && (
-          <button onClick={onClose} className="lg:hidden p-1 text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} aria-label="Fechar menu" className="lg:hidden p-1 text-suave hover:text-white">
             <X size={20} />
           </button>
         )}
@@ -165,36 +158,36 @@ export default function Sidebar({ onClose }) {
         {/* Médico — menu global */}
         {isMedico && (
           <div className="space-y-0.5">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 pb-1">Menu</p>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider px-3 pb-1">Menu</p>
             <NavLink to="/dashboard" end onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
                 }`}>
               <Home size={17} className="shrink-0" /> Painel de Pacientes
             </NavLink>
             <button onClick={() => { navigate('/dashboard/pacientes/novo'); onClose?.() }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-suave hover:bg-white/5 hover:text-white transition-colors">
               <UserPlus size={17} className="shrink-0" /> Novo Paciente
             </button>
             <NavLink to="/dashboard/relatorio" onClick={onClose}
   className={({ isActive }) =>
-    `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-      isActive ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+      isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
     }`}>
   <FileText size={17} className="shrink-0" /> Relatório Pré-Consulta
 </NavLink>
             <NavLink to="/dashboard/exames" onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
                 }`}>
               <FileSearch size={17} className="shrink-0" /> Exames
             </NavLink>
             <NavLink to="/dashboard/diario-privativo" onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-100'
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
                 }`}>
               <Lock size={17} className="shrink-0" /> Diário Privativo
             </NavLink>
@@ -204,11 +197,13 @@ export default function Sidebar({ onClose }) {
         {/* Responsável — menu global */}
         {!isMedico && (
           <div className="space-y-0.5">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 pb-1">Menu</p>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider px-3 pb-1">Menu</p>
             <NavLink to="/diario" end onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  isActive && !isDiario ? 'bg-sol text-noite font-semibold'
+                  : isActive ? 'text-white font-semibold hover:bg-white/5'
+                  : 'text-suave hover:bg-white/5 hover:text-white'
                 }`}>
               <Home size={17} className="shrink-0" /> Diário do Meu Filho(a)
             </NavLink>
@@ -216,7 +211,7 @@ export default function Sidebar({ onClose }) {
             {/* Abas do diário — responsável */}
             {isDiario && (
               <div className="space-y-0.5 mt-1">
-                <div className="my-2 h-px bg-slate-100" />
+                <div className="my-2 h-px bg-white/10" />
                 {PARENT_TABS.map(item => renderItem(item, goTabParent))}
               </div>
             )}
@@ -226,10 +221,7 @@ export default function Sidebar({ onClose }) {
         {/* Médico — seções do paciente aberto */}
         {patientId && (
           <div className="space-y-0.5 mt-2">
-            <div className="my-2 h-px bg-slate-100" />
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 pb-1">
-              Seções do Paciente
-            </p>
+            <div className="my-2 h-px bg-white/10" />
             {DOCTOR_TABS.map(item => renderItem(item, goTabDoctor))}
           </div>
         )}
@@ -238,19 +230,19 @@ export default function Sidebar({ onClose }) {
 
       {/* ── Currículo + Clínicas ── */}
       <div className="px-3 pb-3 space-y-0.5 shrink-0">
-        <div className="h-px bg-slate-100 mb-2" />
+        <div className="h-px bg-white/10 mb-2" />
         <NavLink to="/curriculo" onClick={onClose}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive ? 'bg-teal-50 text-teal-700 border border-teal-100' : 'text-teal-600 hover:bg-teal-50'
+            `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
             }`}>
           <BookUser size={17} className="shrink-0" />
           <span>Currículo do Médico</span>
         </NavLink>
         <NavLink to="/clinicas" onClick={onClose}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive ? 'bg-green-50 text-green-700 border border-green-100' : 'text-green-600 hover:bg-green-50'
+            `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              isActive ? 'bg-sol text-noite font-semibold' : 'text-suave hover:bg-white/5 hover:text-white'
             }`}>
           <MapPin size={17} className="shrink-0" />
           <span>Clínicas de Atendimento</span>
@@ -258,18 +250,18 @@ export default function Sidebar({ onClose }) {
       </div>
 
       {/* ── Usuário + logout ── */}
-      <div className="border-t border-slate-100 px-4 py-3 space-y-2 shrink-0">
+      <div className="border-t border-white/10 px-4 py-3 space-y-2 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-            <User size={16} className="text-blue-600" />
+          <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center shrink-0">
+            <User size={16} className="text-sol" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-800 truncate">{profile?.full_name ?? '—'}</p>
-            <p className="text-xs text-slate-400">{isMedico ? 'Médico' : 'Responsável'}</p>
+            <p className="text-sm font-semibold text-white truncate">{profile?.full_name ?? '—'}</p>
+            <p className="text-xs text-suave">{isMedico ? 'Médico' : 'Responsável'}</p>
           </div>
         </div>
         <button onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors font-medium">
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-300 hover:bg-white/5 hover:text-red-200 transition-colors font-medium">
           <LogOut size={16} /> Sair
         </button>
       </div>

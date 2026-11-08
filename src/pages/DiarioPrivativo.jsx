@@ -47,7 +47,7 @@ export default function DiarioPrivativo() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-4xl mx-auto space-y-5">
 
         <div className="flex items-center gap-3">
           <div className="p-2 bg-violet-100 rounded-lg">

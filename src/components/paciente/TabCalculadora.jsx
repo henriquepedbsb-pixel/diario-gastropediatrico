@@ -146,7 +146,7 @@ function CalcDose() {
       </div>
 
       {pesoValido && (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {MEDICAMENTOS.map(med => (
             <div key={med.nome} className="card p-5 space-y-3">
               <div className="flex items-center justify-between">

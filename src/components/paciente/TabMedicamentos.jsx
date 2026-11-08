@@ -100,7 +100,7 @@ export default function TabMedicamentos({ patient }) {
           <p className="text-xs mt-1">Adicione os medicamentos em uso</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {active.map(med => (
             <div key={med.id} className="card p-4 border-l-4 border-blue-400">
               <div className="flex items-start justify-between gap-3">
