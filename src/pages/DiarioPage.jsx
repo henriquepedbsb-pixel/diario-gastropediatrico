@@ -27,6 +27,9 @@ import TabIntroducaoAlimentar from '../components/paciente/TabIntroducaoAlimenta
 import TabMedicamentos       from '../components/paciente/TabMedicamentos'
 import TabChoro              from '../components/paciente/TabChoro'
 import TabExamesFamilia      from '../components/paciente/TabExamesFamilia'
+import TabMeuDiario          from '../components/paciente/TabMeuDiario'
+import TabTimeline           from '../components/paciente/TabTimeline'
+import { hojeLocal }         from '../hooks/useDiarioFamilia'
 
 /* ─── helpers ─── */
 
@@ -1520,6 +1523,7 @@ const BRISTOL_RESUMO = ['','Constipação grave','Constipação leve','Normal','
 const BRISTOL_COR    = ['','text-red-600','text-orange-500','text-yellow-600','text-green-600','text-yellow-600','text-orange-500','text-red-600']
 
 const ATALHOS = [
+  { tab: 'meudiario', emoji: '📝', label: 'Anotar' },
   { tab: 'refeicoes', emoji: '🍽️', label: 'Refeição' },
   { tab: 'fezes',     emoji: '💧', label: 'Intestinal' },
   { tab: 'sintomas',  emoji: '⚠️', label: 'Sintoma' },
@@ -1550,7 +1554,10 @@ function TabResumo({ patient, onNavigate }) {
       supabase.from('medications').select('name,dose').eq('patient_id', pid).eq('is_active', true),
       supabase.from('food_introductions').select('food_name,introduced_at,reaction').eq('patient_id', pid).order('introduced_at', { ascending: false }).limit(1),
       supabase.from('crying_records').select('recorded_at,duration_min,intensity').eq('patient_id', pid).order('recorded_at', { ascending: false }).limit(3),
-    ]).then(([meal, stool, symp, sleep, bf, meds, food, crying]) => {
+      supabase.from('family_journal_entries').select('id,entry_at,content,ask_at_visit,visibility,discussed_at,remind_on,reminder_done').eq('patient_id', pid).order('entry_at', { ascending: false }).limit(100),
+    ]).then(([meal, stool, symp, sleep, bf, meds, food, crying, diario]) => {
+      const notas = diario.data ?? []
+      const hoje  = hojeLocal()
       setData({
         meal:   meal.data?.[0]   ?? null,
         stool:  stool.data?.[0]  ?? null,
@@ -1560,6 +1567,9 @@ function TabResumo({ patient, onNavigate }) {
         meds:   meds.data        ?? [],
         food:   food.data?.[0]   ?? null,
         crying: crying.data      ?? [],
+        diarioUltima:    notas[0] ?? null,
+        diarioPerguntas: notas.filter(n => n.ask_at_visit && n.visibility === 'shared' && !n.discussed_at).length,
+        diarioLembretes: notas.filter(n => n.remind_on && !n.reminder_done && n.remind_on <= hoje),
       })
       setLoading(false)
     })
@@ -1581,6 +1591,24 @@ function TabResumo({ patient, onNavigate }) {
   )
 
   const cards = [
+    {
+      tab:   'meudiario',
+      emoji: '📝',
+      title: 'Meu Diário',
+      cor:   'border-l-amber-400 bg-amber-50/40',
+      iconCor: 'bg-amber-100 text-amber-700',
+      content: data.diarioUltima ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700 line-clamp-2 break-words">{data.diarioUltima.content}</p>
+          {data.diarioPerguntas > 0 && (
+            <p className="text-xs font-semibold text-amber-700">
+              ❓ {data.diarioPerguntas} {data.diarioPerguntas === 1 ? 'dúvida' : 'dúvidas'} p/ consulta
+            </p>
+          )}
+          <p className="text-xs text-slate-400 mt-1">{ago(data.diarioUltima.entry_at)}</p>
+        </>
+      ) : <p className="text-sm text-slate-400">Escreva sua primeira anotação</p>,
+    },
     {
       tab:   'refeicoes',
       emoji: '🍽️',
@@ -1742,6 +1770,22 @@ function TabResumo({ patient, onNavigate }) {
         <div aria-hidden className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-sol/10 blur-2xl" />
       </div>
 
+      {/* Lembretes do diário */}
+      {data.diarioLembretes.length > 0 && (
+        <button onClick={() => onNavigate('meudiario')}
+          className="w-full card p-4 text-left border-l-4 border-l-amber-400 hover:shadow-md transition-shadow active:scale-[0.99]">
+          <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1.5">
+            🔔 {data.diarioLembretes.length === 1 ? 'Você tem 1 lembrete' : `Você tem ${data.diarioLembretes.length} lembretes`}
+          </p>
+          {data.diarioLembretes.slice(0, 3).map(l => (
+            <p key={l.id} className="text-sm text-slate-700 truncate">• {l.content}</p>
+          ))}
+          {data.diarioLembretes.length > 3 && (
+            <p className="text-xs text-slate-400 mt-1">+{data.diarioLembretes.length - 3} no Meu Diário</p>
+          )}
+        </button>
+      )}
+
       {/* Grid de cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {cards.map(card => (
@@ -1880,6 +1924,8 @@ export default function DiarioPage() {
           {tab === 'choro'          && <TabChoro               patient={paciente} />}
           {tab === 'graficosfezes'  && <TabIntestinal          patient={paciente} />}
           {tab === 'exames'         && <TabExamesFamilia       patient={paciente} />}
+          {tab === 'meudiario'      && <TabMeuDiario           patient={paciente} />}
+          {tab === 'timeline'       && <TabTimeline            patient={paciente} />}
         </div>
       </div>
     </div>

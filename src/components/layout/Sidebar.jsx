@@ -5,7 +5,7 @@ import {
   Milestone, Syringe, BookUser, MessageSquareQuote,
   AlertTriangle, Moon, Baby, Calculator, Bell, FolderOpen,
   HelpCircle, MapPin, History, Sprout, Pill, Frown, Lightbulb, LayoutDashboard,
-  FileSearch, Lock,
+  FileSearch, Lock, NotebookPen,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import BrandMark from './BrandMark'
@@ -27,6 +27,7 @@ const DOCTOR_TABS = [
   { id: 'introducao',     label: 'Introdução Alim.',  icon: Sprout          },
 
   H('Saúde & Registros'),
+  { id: 'diariofamilia',  label: 'Diário da Família', icon: NotebookPen     },
   { id: 'sintomas',       label: 'Sintomas',          icon: AlertTriangle   },
   { id: 'fezes',          label: 'Intestinal',        icon: Droplets        },
   { id: 'sono',           label: 'Sono',              icon: Moon            },
@@ -59,6 +60,7 @@ const DOCTOR_TABS = [
 const PARENT_TABS = [
   H('Meu Filho(a)'),
   { id: 'resumo',         label: 'Visão Geral',       icon: LayoutDashboard },
+  { id: 'meudiario',      label: 'Meu Diário',        icon: NotebookPen     },
   { id: 'cadastro',       label: 'Cadastro',          icon: ClipboardList   },
 
   H('Alimentação'),
