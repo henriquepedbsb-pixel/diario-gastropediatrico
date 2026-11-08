@@ -265,3 +265,24 @@ supabase.channel('realtime-activity')
   .subscribe()
 ```
 Exibe notificação do browser se `Notification.permission === 'granted'`.
+
+
+---
+
+## Multi-médico e planos (multi-medico-freemium-migration.sql)
+
+- `patients.doctor_id` (NOT NULL, default `auth.uid()`): cada paciente pertence a um médico.
+  Família e médico não conseguem trocar o dono (trigger `trg_patients_guard_doctor`).
+- Funções: `is_doctor()`, `is_admin()`, `doctor_owns_patient(patient_id)`,
+  `parent_owns_patient(patient_id)`, `storage_patient_id(path)`.
+- **Toda política de médico em tabela por paciente usa `doctor_owns_patient(patient_id)`.**
+  Nunca mais `EXISTS (... role = 'doctor')` sozinho.
+- `profiles.is_admin`: dono do sistema (recebe pedidos de cadastro sem médico, gerencia depoimentos).
+- `patient_requests.doctor_id`: médico de destino (nulo → administrador).
+- `tips.doctor_id`: família vê só as dicas publicadas do médico dela.
+- `doctor_subscriptions` (plan: free · starter · clinica · cortesia): só o servidor escreve
+  (SQL Editor / webhook Hotmart com service_role). Limite em `doctor_patient_limit()`:
+  free=1 · starter=30 · clinica/cortesia=ilimitado · pago vencido/cancelado → 1.
+- Trigger `trg_patients_enforce_limit` bloqueia INSERT acima do limite (mensagem amigável).
+- Front: `usePlano()` (rpc `my_plan`) + `PlanoCard`; checkout em `VITE_HOTMART_CHECKOUT_URL`.
+- Storage: políticas `ps_*` por bucket, pasta = id do paciente (`fraldas/{id}/…` em patient-documents).
