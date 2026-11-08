@@ -18,6 +18,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import Relatorio from './pages/Relatorio'
 import Exames from './pages/Exames'
 import DiarioPrivativo from './pages/DiarioPrivativo'
+import ConvitePage from './pages/ConvitePage'
 
 /* ── Redireciona após login baseado no perfil ── */
 function RootRedirect() {
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/cadastro"        element={<PublicOnly><RegisterPage /></PublicOnly>} />
         <Route path="/esqueci-senha"   element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
         <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+        <Route path="/convite/:token"  element={<ConvitePage />} />
 
         {/* Protegidas — dentro do Layout */}
         <Route element={<ProtectedLayout />}>
