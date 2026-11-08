@@ -105,7 +105,7 @@ export default function TabExamesFamilia({ patient }) {
           <p className="text-xs mt-1">Toque no botão acima para anexar o primeiro</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {exames.map(ex => {
             const Icon = ex.file_type === 'pdf' ? FileText : ImageIcon
             return (

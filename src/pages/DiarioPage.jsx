@@ -194,7 +194,7 @@ function TabRefeicoes({ patient }) {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1,2,3].map(i => <div key={i} className="card p-4 h-20 animate-pulse bg-slate-100" />)}
         </div>
       ) : entries.length === 0 ? (
@@ -211,7 +211,7 @@ function TabRefeicoes({ patient }) {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 px-1">
                 {format(parseISO(dia), "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </p>
-              <div className="space-y-2">
+              <div className="grid gap-3 lg:grid-cols-2 items-start">
                 {itens.map(e => {
                   const ref = REFEICOES[e.meal_type] ?? { label: e.meal_type, emoji: '🍴' }
                   return (
@@ -357,7 +357,7 @@ function TabReceitas({ patient }) {
       <p className="text-sm text-slate-500">{receitas.length} prescrição{receitas.length !== 1 ? 'ões' : ''} ativa{receitas.length !== 1 ? 's' : ''}</p>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1,2].map(i => <div key={i} className="card p-4 h-20 animate-pulse bg-slate-100" />)}
         </div>
       ) : receitas.length === 0 ? (
@@ -367,7 +367,7 @@ function TabReceitas({ patient }) {
           <p className="text-xs mt-1">As prescrições emitidas pelo médico aparecem aqui</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {receitas.map(r => (
             <div key={r.id} className="card p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
@@ -440,7 +440,7 @@ function TabDicas() {
       )}
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 items-start">
           {[1,2,3].map(i => <div key={i} className="card h-32 animate-pulse bg-slate-100" />)}
         </div>
       ) : visíveis.length === 0 ? (
@@ -450,7 +450,7 @@ function TabDicas() {
           <p className="text-xs mt-1">O médico publicará orientações aqui</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 items-start">
           {visíveis.map(tip => {
             const meta = CATEGORY_META[tip.category] ?? CATEGORY_META.general
             return (
@@ -703,7 +703,7 @@ function TabFezes({ patient }) {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1,2,3].map(i => <div key={i} className="card p-4 h-20 animate-pulse bg-slate-100" />)}
         </div>
       ) : entries.length === 0 ? (
@@ -719,7 +719,7 @@ function TabFezes({ patient }) {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 px-1">
                 {format(parseISO(dia), "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </p>
-              <div className="space-y-2">
+              <div className="grid gap-3 lg:grid-cols-2 items-start">
                 {itens.map(e => {
                   const corMeta = CORES_FEZES.find(c => c.value === e.color)
                   return (
@@ -1272,7 +1272,7 @@ function TabCadastroPai({ patient, onUpdate }) {
 
   /* ── Modo exibição ── */
   if (!editing) return (
-    <div className="space-y-4 max-w-2xl mx-auto">
+    <div className="space-y-4 max-w-3xl mx-auto">
 
       {/* Botão retornar */}
       <button
@@ -1389,7 +1389,7 @@ function TabCadastroPai({ patient, onUpdate }) {
 
   /* ── Modo edição ── */
   return (
-    <div className="space-y-4 max-w-2xl mx-auto">
+    <div className="space-y-4 max-w-3xl mx-auto">
       <div className="card p-6 space-y-5">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <h3 className="font-semibold text-slate-700">Completar Cadastro</h3>
@@ -1519,7 +1519,23 @@ function TabCadastroPai({ patient, onUpdate }) {
 const BRISTOL_RESUMO = ['','Constipação grave','Constipação leve','Normal','Ideal','Diarreia leve','Diarreia moderada','Diarreia grave']
 const BRISTOL_COR    = ['','text-red-600','text-orange-500','text-yellow-600','text-green-600','text-yellow-600','text-orange-500','text-red-600']
 
+const ATALHOS = [
+  { tab: 'refeicoes', emoji: '🍽️', label: 'Refeição' },
+  { tab: 'fezes',     emoji: '💧', label: 'Intestinal' },
+  { tab: 'sintomas',  emoji: '⚠️', label: 'Sintoma' },
+  { tab: 'sono',      emoji: '🌙', label: 'Sono' },
+]
+
+const saudacaoHora = () => {
+  const h = new Date().getHours()
+  return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
+}
+
 function TabResumo({ patient, onNavigate }) {
+  const { profile } = useAuth()
+  const nomeResp     = profile?.full_name?.split(' ')[0] ?? ''
+  const primeiroNome = patient.name?.split(' ')[0] ?? ''
+  const artigo       = patient.gender === 'F' ? 'da' : patient.gender === 'M' ? 'do' : 'de'
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -1557,7 +1573,7 @@ function TabResumo({ patient, onNavigate }) {
   }
 
   if (loading) return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {[...Array(8)].map((_, i) => (
         <div key={i} className="card h-28 animate-pulse bg-slate-100" />
       ))}
@@ -1574,7 +1590,7 @@ function TabResumo({ patient, onNavigate }) {
       content: data.meal ? (
         <>
           <p className="text-sm font-semibold text-slate-700 truncate">
-            {data.meal.meal_type ?? 'Refeição'}
+            {REFEICOES[data.meal.meal_type]?.label ?? data.meal.meal_type ?? 'Refeição'}
           </p>
           <p className="text-xs text-slate-500 truncate">{data.meal.description ?? '—'}</p>
           <p className="text-xs text-slate-400 mt-1">{ago(data.meal.eaten_at)}</p>
@@ -1691,7 +1707,7 @@ function TabResumo({ patient, onNavigate }) {
       content: data.crying.length > 0 ? (
         <>
           <p className="text-sm font-semibold text-slate-700">
-            {data.crying.length} episódio{data.crying.length !== 1 ? 's' : ''} recentes
+            {data.crying.length} episódio{data.crying.length !== 1 ? 's recentes' : ' recente'}
           </p>
           <p className="text-xs text-slate-500">
             Último: {data.crying[0].intensity ?? '—'} · {data.crying[0].duration_min ? `${data.crying[0].duration_min} min` : ''}
@@ -1705,17 +1721,32 @@ function TabResumo({ patient, onNavigate }) {
   return (
     <div className="space-y-5">
       {/* Saudação */}
-      <div className="card p-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0">
-        <p className="text-xs font-medium opacity-80 mb-1">Visão geral do diário</p>
-        <p className="text-2xl font-bold leading-snug">{patient.name}</p>
-        <p className="text-sm opacity-80 mt-0.5">{calcIdade(patient.birthdate)}</p>
+      <div className="hero-band rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-sol mb-2">{saudacaoHora()}{nomeResp ? `, ${nomeResp}` : ''}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold leading-tight">
+              Como está o dia {artigo} <span className="text-sol">{primeiroNome}</span>?
+            </p>
+            <p className="text-sm text-suave mt-2 max-w-xl">Registre o que aconteceu entre as consultas — o Dr. Henrique acompanha tudo por aqui.</p>
+          </div>
+          <div className="flex flex-wrap lg:flex-nowrap lg:shrink-0 gap-2">
+            {ATALHOS.map(a => (
+              <button key={a.tab} onClick={() => onNavigate(a.tab)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-white/10 hover:bg-sol hover:text-noite border border-white/15 transition-colors">
+                <span aria-hidden>{a.emoji}</span> {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div aria-hidden className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-sol/10 blur-2xl" />
       </div>
 
       {/* Grid de cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {cards.map(card => (
           <button key={card.tab} onClick={() => onNavigate(card.tab)}
-            className={`card p-4 text-left border-l-4 ${card.cor} hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.98]`}>
+            className={`card p-4 sm:p-5 text-left border-l-4 ${card.cor} hover:shadow-lg hover:-translate-y-1 transition-all duration-200 active:scale-[0.98]`}>
             <div className="flex items-center gap-2 mb-3">
               <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${card.iconCor}`}>
                 {card.emoji}
@@ -1729,10 +1760,7 @@ function TabResumo({ patient, onNavigate }) {
         ))}
       </div>
 
-      {/* Atalho rápido */}
-      <div className="card p-3 border-dashed border-slate-200 bg-slate-50/50 text-center">
-        <p className="text-xs text-slate-400">Toque em qualquer card para abrir a seção completa</p>
-      </div>
+      <p className="text-xs text-slate-400 text-center">Toque em um card para abrir a seção completa</p>
     </div>
   )
 }
@@ -1749,11 +1777,11 @@ function TabIntestinal({ patient }) {
   ]
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-full sm:w-fit">
         {SUBTABS.map(s => (
           <button key={s.id} onClick={() => setSubTab(s.id)}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all
-              ${subTab === s.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            className={`flex-1 sm:flex-none sm:px-5 py-2 rounded-full text-xs font-semibold transition-all
+              ${subTab === s.id ? 'bg-white text-noite shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
             {s.label}
           </button>
         ))}
@@ -1804,8 +1832,8 @@ export default function DiarioPage() {
     <div className="flex flex-col h-full">
 
       {/* Cabeçalho do paciente */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
-        <div className="max-w-2xl mx-auto">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-4 shrink-0">
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-2xl shrink-0 overflow-hidden ${!paciente.photo_url ? avatarColor : ''}`}>
               {paciente.photo_url ? (
@@ -1817,7 +1845,7 @@ export default function DiarioPage() {
               )}
             </div>
             <div>
-              <h1 className="font-bold text-slate-800 text-lg leading-tight">{paciente.name}</h1>
+              <h1 className="font-extrabold text-noite text-lg sm:text-xl leading-tight">{paciente.name}</h1>
               <p className="text-sm text-slate-500">
                 {calcIdade(paciente.birthdate)}
                 {paciente.gender === 'M' ? ' · Masculino' : paciente.gender === 'F' ? ' · Feminino' : ''}
@@ -1829,8 +1857,8 @@ export default function DiarioPage() {
       </div>
 
       {/* Conteúdo principal — largura total */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl mx-auto">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div key={tab} className="max-w-6xl mx-auto tab-enter">
           {tab === 'resumo'         && <TabResumo         patient={paciente} onNavigate={setTab} />}
           {tab === 'cadastro'       && <TabCadastroPai    patient={paciente} onUpdate={refreshPaciente} />}
           {tab === 'refeicoes'      && <TabRefeicoes      patient={paciente} />}

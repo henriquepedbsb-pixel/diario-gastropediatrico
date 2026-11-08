@@ -1,39 +1,92 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   Identidade visual — mesmo padrão de meumedicopediatra.com.br
+   (Design System "Henrique Gomes": noite, marinho, sol, Montserrat)
+   A escala "blue" do Tailwind foi substituída pela escala marinho,
+   então todas as classes bg-blue-*, text-blue-* etc. já seguem a marca.
+───────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: "Montserrat", "Segoe UI", system-ui, sans-serif;
+
+  --color-blue-50:  #EEF3FA;
+  --color-blue-100: #DCE6F4;
+  --color-blue-200: #BACDE8;
+  --color-blue-300: #8FABD6;
+  --color-blue-400: #5E84BD;
+  --color-blue-500: #3A64A3;
+  --color-blue-600: #234B8A;
+  --color-blue-700: #163462;
+  --color-blue-800: #102850;
+  --color-blue-900: #0A1834;
+  --color-blue-950: #060F22;
+
+  --color-noite:   #0A1834;
+  --color-marinho: #163462;
+  --color-suave:   #B0C4E2;
+  --color-sol:     #FFE600;
+  --color-paper:   #F4F6FA;
+}
+
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
-  body { @apply bg-slate-50 text-slate-900 antialiased; font-family: 'Inter', system-ui, sans-serif; }
+  body {
+    @apply bg-paper text-slate-900 antialiased;
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+  h1, h2, h3 { letter-spacing: -0.01em; }
+  :focus-visible { outline: 3px solid var(--color-sol); outline-offset: 2px; }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm
            transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm
            transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
-           bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm;
+           bg-marinho text-white hover:bg-noite active:scale-95 shadow-sm;
+  }
+  .btn-sun {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
+           bg-sol text-noite hover:brightness-95 active:scale-95;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm
            transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
            bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 active:scale-95;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm
            transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
            bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95;
   }
   .input {
-    @apply w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
-           placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500
+    @apply w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900
+           placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400
            focus:border-transparent transition-all;
   }
-  .label { @apply block text-sm font-medium text-slate-700 mb-1; }
-  .card { @apply bg-white rounded-xl border border-slate-200 shadow-sm; }
-  .section-header { @apply text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3; }
-  .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium; }
+  .label { @apply block text-sm font-semibold text-slate-700 mb-1; }
+  .card { @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm; }
+  .section-header { @apply text-xs font-bold text-slate-500 uppercase tracking-wider mb-3; }
+  .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold; }
   .page-header { @apply flex items-center justify-between mb-6; }
-  .page-title { @apply text-2xl font-bold text-slate-800; }
+  .page-title { @apply text-2xl font-extrabold text-noite; }
+
+  /* Faixa no padrão do site: degradê noite → marinho */
+  .hero-band { background: linear-gradient(135deg, var(--color-noite) 0%, var(--color-marinho) 100%); color: #fff; }
+
+  /* Entrada suave do conteúdo ao trocar de aba */
+  .tab-enter { animation: tab-enter .22s ease-out both; }
+}
+
+@keyframes tab-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter { animation: none; }
 }

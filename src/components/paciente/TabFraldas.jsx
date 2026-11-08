@@ -202,7 +202,7 @@ export default function TabFraldas({ patient }) {
 
       {/* Lista */}
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1,2,3].map(i => <div key={i} className="card h-20 animate-pulse bg-slate-100" />)}
         </div>
       ) : entries.length === 0 ? (
@@ -221,7 +221,7 @@ export default function TabFraldas({ patient }) {
                 <span className="ml-2 normal-case font-normal">· {itens.length} troca{itens.length !== 1 ? 's' : ''}</span>
               </p>
 
-              <div className="space-y-2">
+              <div className="grid gap-3 lg:grid-cols-2 items-start">
                 {itens.map(entry => {
                   const meta = tipoMeta(entry.tipo)
                   return (

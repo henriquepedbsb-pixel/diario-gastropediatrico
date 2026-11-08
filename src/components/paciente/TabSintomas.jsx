@@ -119,7 +119,7 @@ export default function TabSintomas({ patient }) {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1, 2].map(i => <div key={i} className="card p-4 h-20 animate-pulse bg-slate-100" />)}
         </div>
       ) : entries.length === 0 ? (
@@ -128,7 +128,7 @@ export default function TabSintomas({ patient }) {
           <p className="text-xs mt-1">Registre intercorrências para acompanhamento</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {entries.map(e => {
             const sev = SEVERIDADE[e.severity - 1]
             return (

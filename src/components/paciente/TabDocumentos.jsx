@@ -101,7 +101,7 @@ export default function TabDocumentos({ patient }) {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1, 2].map(i => <div key={i} className="card p-4 h-16 animate-pulse bg-slate-100" />)}
         </div>
       ) : docs.length === 0 ? (
@@ -111,7 +111,7 @@ export default function TabDocumentos({ patient }) {
           <p className="text-xs mt-1">Adicione exames, laudos e receitas</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {docs.map(d => {
             const cat = CATEGORIAS.find(c => c.value === d.category)
             return (

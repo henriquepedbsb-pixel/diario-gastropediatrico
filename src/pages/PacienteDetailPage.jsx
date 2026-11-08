@@ -163,7 +163,7 @@ function TabDiario({ patient }) {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1,2,3].map(i => <div key={i} className="card p-4 h-16 animate-pulse bg-slate-100" />)}
         </div>
       ) : entries.length === 0 ? (
@@ -172,7 +172,7 @@ function TabDiario({ patient }) {
           <p>Nenhuma refeição registrada</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {entries.map(e => {
             const ref = REFEICOES[e.meal_type] ?? { label: e.meal_type, emoji: '🍴' }
             return (
@@ -751,7 +751,7 @@ function TabReceitas({ patient }) {
       )}
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {[1, 2].map(i => <div key={i} className="card p-4 h-20 animate-pulse bg-slate-100" />)}
         </div>
       ) : receitas.length === 0 ? (
@@ -760,7 +760,7 @@ function TabReceitas({ patient }) {
           <p className="font-medium">Nenhuma prescrição registrada</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {receitas.map(r => (
             <div key={r.id} className="card p-4">
               <div className="flex items-start justify-between gap-2">
@@ -1223,7 +1223,7 @@ function TabCadastro({ patient, onUpdate }) {
   )
 
   return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="space-y-4 max-w-3xl">
 
       {/* ── Modo exibição ── */}
       {!editing && (
@@ -1592,7 +1592,7 @@ function TabFezes({ patient }) {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
                 {format(parseISO(dia), "EEEE, dd/MM/yyyy", { locale: ptBR })}
               </p>
-              <div className="space-y-2">
+              <div className="grid gap-3 lg:grid-cols-2 items-start">
                 {itens.map(e => {
                   const b = BRISTOL_DOC[e.bristol_type - 1]
                   const c = CORES_DOC.find(x => x.value === e.color)
@@ -1725,11 +1725,11 @@ function TabIntestinal({ patient }) {
   ]
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-full sm:w-fit">
         {SUBTABS.map(s => (
           <button key={s.id} onClick={() => setSubTab(s.id)}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all
-              ${subTab === s.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            className={`flex-1 sm:flex-none sm:px-5 py-2 rounded-full text-xs font-semibold transition-all
+              ${subTab === s.id ? 'bg-white text-noite shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
             {s.label}
           </button>
         ))}
@@ -1833,8 +1833,8 @@ export default function PacienteDetailPage() {
     <div className="flex flex-col h-full">
 
       {/* Cabeçalho */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
-        <div className="flex items-center gap-4 max-w-4xl mx-auto">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-4 shrink-0">
+        <div className="flex items-center gap-4 max-w-6xl mx-auto">
           <button onClick={() => navigate('/dashboard')}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0">
             <ArrowLeft size={20} />
@@ -1934,8 +1934,8 @@ export default function PacienteDetailPage() {
       {/* Conteúdo principal — largura total */}
       <div className="flex-1 overflow-y-auto">
 
-          <div className="p-6">
-          <div className="max-w-3xl mx-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
+          <div key={activeTab} className="max-w-6xl mx-auto tab-enter">
             {activeTab === 'cadastro'       && <TabCadastro      patient={patient} onUpdate={loadPatient} />}
             {activeTab === 'diario'         && <TabDiario        patient={patient} />}
             {activeTab === 'fezes'          && <TabIntestinal    patient={patient} />}

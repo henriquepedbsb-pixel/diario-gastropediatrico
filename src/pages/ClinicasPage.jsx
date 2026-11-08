@@ -34,7 +34,7 @@ const CLINICAS = [
 
 export default function ClinicasPage() {
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
 
       {/* Cabeçalho */}
       <div>

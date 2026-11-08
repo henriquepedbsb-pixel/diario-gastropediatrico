@@ -266,7 +266,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
 
       {/* Boas-vindas */}
       <div className="flex items-start justify-between">
@@ -555,7 +555,7 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
             {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24" />)}
           </div>
         ) : filtered.length === 0 ? (
@@ -576,7 +576,7 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
             {filtered.map(p => (
               <PatientCard
                 key={p.id}
