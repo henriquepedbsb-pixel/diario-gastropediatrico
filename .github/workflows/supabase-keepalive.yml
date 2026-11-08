@@ -1,0 +1,49 @@
+# Mantém o projeto Supabase do PedDiário ativo.
+# O plano gratuito do Supabase pausa o projeto após ~7 dias sem acesso.
+# Esta rotina faz uma consulta leve a cada 3 dias. Se o projeto estiver
+# pausado ou fora do ar, a execução falha e o GitHub envia um e-mail de aviso.
+#
+# Requer um segredo no repositório (Settings → Secrets and variables → Actions):
+#   SUPABASE_ANON_KEY  → a chave "anon public" do projeto (Supabase → Project Settings → API)
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 12 */3 * *" # a cada 3 dias, por volta das 09:17 de Brasília
+  workflow_dispatch: # permite rodar manualmente pela aba Actions
+
+permissions:
+  actions: write # necessário para renovar o agendamento (ver último passo)
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: https://jksxhqkarnzipgwcrcwg.supabase.co
+    steps:
+      - name: Consultar o banco
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Segredo SUPABASE_ANON_KEY não configurado."
+            exit 1
+          fi
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/tips?select=*&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "Resposta do Supabase: HTTP $status"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Supabase respondeu HTTP $status. O projeto pode estar pausado."
+            exit 1
+          fi
+
+      # Em repositórios públicos, o GitHub desativa agendamentos após 60 dias
+      # sem atividade no repositório. Reativar o workflow reinicia essa contagem.
+      - name: Renovar o agendamento
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/supabase-keepalive.yml/enable"
