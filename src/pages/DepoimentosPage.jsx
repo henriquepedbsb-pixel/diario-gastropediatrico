@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Star, Plus, Trash2, Eye, EyeOff, MessageSquareQuote, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { isDoctor } from '../lib/utils'
 
 function StarRating({ value, onChange }) {
   return (
@@ -20,6 +22,8 @@ function StarRating({ value, onChange }) {
 const EMPTY = { autor: '', texto: '', nota: 5, data_avaliacao: '' }
 
 export default function DepoimentosPage() {
+  const { profile } = useAuth()
+  const podeGerenciar = isDoctor(profile?.role)
   const [lista,    setLista]    = useState([])
   const [loading,  setLoading]  = useState(true)
   const [form,     setForm]     = useState(EMPTY)
@@ -109,16 +113,16 @@ export default function DepoimentosPage() {
             <p className="text-xs text-slate-500">Avaliações exibidas no currículo</p>
           </div>
         </div>
-        <button
+        {podeGerenciar && <button
           onClick={() => setShowForm(v => !v)}
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
         >
           <Plus size={16} /> Adicionar
-        </button>
+        </button>}
       </div>
 
       {/* Formulário */}
-      {showForm && (
+      {podeGerenciar && showForm && (
         <form onSubmit={salvar} className="card p-5 space-y-4">
           <h2 className="text-sm font-semibold text-slate-700">Novo depoimento</h2>
 
@@ -180,7 +184,7 @@ export default function DepoimentosPage() {
         <div className="card p-8 text-center">
           <MessageSquareQuote size={32} className="text-slate-300 mx-auto mb-2" />
           <p className="text-sm text-slate-500">Nenhum depoimento ainda.</p>
-          <p className="text-xs text-slate-400 mt-1">Clique em "Adicionar" para incluir avaliações da Doctoralia.</p>
+          {podeGerenciar && <p className="text-xs text-slate-400 mt-1">Clique em "Adicionar" para incluir avaliações da Doctoralia.</p>}
         </div>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2 items-start">
@@ -204,7 +208,7 @@ export default function DepoimentosPage() {
                 </div>
                 <p className="text-sm text-slate-600 mt-2 leading-relaxed">{dep.texto}</p>
               </div>
-              <div className="flex flex-col gap-2 shrink-0">
+              {podeGerenciar && <div className="flex flex-col gap-2 shrink-0">
                 <button onClick={() => toggleVisivel(dep)}
                   title={dep.visivel ? 'Ocultar do currículo' : 'Exibir no currículo'}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
@@ -214,7 +218,7 @@ export default function DepoimentosPage() {
                   className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
                   <Trash2 size={16} />
                 </button>
-              </div>
+              </div>}
             </div>
           ))}
         </div>

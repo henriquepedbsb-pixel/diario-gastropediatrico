@@ -29,7 +29,9 @@ export function AuthProvider({ children }) {
       if (!queryErr && (!profiles || profiles.length === 0)) {
         console.log('[Auth] perfil não encontrado, criando automaticamente...')
         const { data: { user } } = await supabase.auth.getUser()
-        const roleNovo = user?.user_metadata?.role === 'doctor' ? 'doctor' : 'parent'
+        // Papel nunca vem do navegador: todo perfil novo nasce 'parent'.
+        // Médico só é promovido no servidor (redeem_doctor_invite).
+        const roleNovo = 'parent'
         const { data: novo, error: insErr } = await supabase
           .from('profiles')
           .insert({
@@ -146,8 +148,7 @@ export function AuthProvider({ children }) {
 
   /* ─── cadastro médico ─── */
   const signUpMedico = async ({ email, password, full_name, codigoConvite }) => {
-    if (codigoConvite?.trim() !== 'GASTRO2024')
-      throw new Error('Código de acesso inválido.')
+    if (!codigoConvite?.trim()) throw new Error('Informe o código de acesso.')
 
     duranteSignup.current = true
     try {
@@ -155,11 +156,20 @@ export function AuthProvider({ children }) {
       if (error) throw error
       if (!data.user) throw new Error('Confirme seu e-mail para ativar a conta.')
 
+      if (!data.session) throw new Error('Confirme seu e-mail e depois entre para concluir o cadastro.')
+
       const uid = data.user.id
+      // Perfil nasce como 'parent'; o convite é validado no servidor
       const { error: pe } = await supabase
         .from('profiles')
-        .insert({ id: uid, role: 'doctor', full_name })
+        .insert({ id: uid, role: 'parent', full_name })
       if (pe) throw pe
+
+      const { data: ok, error: re } = await supabase.rpc('redeem_doctor_invite', { p_code: codigoConvite.trim() })
+      if (re || ok !== true) {
+        await supabase.auth.signOut().catch(() => {})
+        throw new Error('Código de acesso inválido ou já utilizado.')
+      }
 
       perfilCarregado.current = uid
       setSession(data.session)
