@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { ArrowLeft, Baby, Users, Scale, X, Plus, Loader2, Mail } from 'lucide-react'
+import { ArrowLeft, Baby, Users, Scale, X, Plus, Loader2, Mail, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { usePlano } from '../hooks/usePlano'
+import { BotaoUpgrade } from '../components/plano/PlanoCard'
 
 const BLOOD_TYPES = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−']
 
@@ -73,6 +75,7 @@ export default function NovoPacientePage() {
   const [allergies, setAllergies] = useState([])
   const [loading,   setLoading]   = useState(false)
   const [erro,      setErro]      = useState('')
+  const { plano, loading: loadingPlano, podeCadastrar } = usePlano()
 
   const onSubmit = async (values) => {
     setLoading(true)
@@ -157,6 +160,25 @@ export default function NovoPacientePage() {
         </div>
       </div>
 
+      {!loadingPlano && !podeCadastrar ? (
+        <div className="card p-6 sm:p-8 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+            <Lock size={22} />
+          </div>
+          <h2 className="text-lg font-bold text-noite">Limite do plano atingido</h2>
+          <p className="text-sm text-slate-600 max-w-md mx-auto">
+            Seu plano {plano?.nome ? <strong>{plano.nome}</strong> : null} permite até{' '}
+            <strong>{plano?.limite} paciente{plano?.limite !== 1 ? 's' : ''}</strong>. Os pacientes que
+            você já tem continuam disponíveis normalmente.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+            <BotaoUpgrade />
+            <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary">
+              Voltar ao painel
+            </button>
+          </div>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
         {/* ── Identificação ── */}
@@ -403,6 +425,7 @@ export default function NovoPacientePage() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

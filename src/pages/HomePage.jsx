@@ -9,6 +9,8 @@ import {
 import { differenceInMonths, differenceInYears, parseISO, format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '../lib/supabase'
+import { usePlano } from '../hooks/usePlano'
+import PlanoCard from '../components/plano/PlanoCard'
 
 function saudacao() {
   const h = new Date().getHours()
@@ -124,6 +126,7 @@ function PatientCard({ patient, onClick, onClearBadge }) {
 }
 
 export default function HomePage() {
+  const { plano, recarregar: recarregarPlano } = usePlano()
   const navigate  = useNavigate()
   const location  = useLocation()
   const { profile } = useAuth()
@@ -240,6 +243,7 @@ export default function HomePage() {
 
       setPendingReqs(prev => prev.filter(r => r.id !== req.id))
       setPatients(prev => [...prev, patient].sort((a, b) => a.name.localeCompare(b.name)))
+      recarregarPlano()
     } catch (err) {
       console.error('Erro ao aprovar solicitação:', err)
       alert('Erro ao aprovar: ' + (err.message ?? err))
@@ -282,6 +286,9 @@ export default function HomePage() {
           <UserPlus size={16} /> Novo Paciente
         </button>
       </div>
+
+      {/* Plano do médico */}
+      <PlanoCard plano={plano} />
 
       {/* Solicitações de cadastro pendentes */}
       {!loading && pendingReqs.length > 0 && (
