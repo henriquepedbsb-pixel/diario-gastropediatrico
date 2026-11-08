@@ -17,7 +17,7 @@ export function useRelatorio() {
     setDados(null)
 
     try {
-      const [resPac, resSin, resSon, resAma] = await Promise.all([
+      const [resPac, resSin, resSon, resAma, resDiaPer, resDiaDuv] = await Promise.all([
 
         supabase
           .from('patients')
@@ -48,6 +48,26 @@ export function useRelatorio() {
           .gte('started_at', `${dataInicio}T00:00:00`)
           .lte('started_at', `${dataFim}T23:59:59`)
           .order('started_at', { ascending: true }),
+
+        // Meu Diário — anotações compartilhadas pela família no período
+        supabase
+          .from('family_journal_entries')
+          .select('id, entry_at, content, tag, ask_at_visit, discussed_at')
+          .eq('patient_id', pacienteId)
+          .eq('visibility', 'shared')
+          .gte('entry_at', `${dataInicio}T00:00:00`)
+          .lte('entry_at', `${dataFim}T23:59:59`)
+          .order('entry_at', { ascending: true }),
+
+        // Meu Diário — dúvidas ainda não conversadas (de qualquer data)
+        supabase
+          .from('family_journal_entries')
+          .select('id, entry_at, content, tag, ask_at_visit, discussed_at')
+          .eq('patient_id', pacienteId)
+          .eq('visibility', 'shared')
+          .eq('ask_at_visit', true)
+          .is('discussed_at', null)
+          .order('entry_at', { ascending: true }),
       ])
 
       if (resPac.error) throw new Error(`Paciente não encontrado: ${resPac.error.message}`)
@@ -55,6 +75,12 @@ export function useRelatorio() {
       const sintomas    = resSin.error ? [] : (resSin.data || [])
       const sono        = resSon.error ? [] : (resSon.data || [])
       const amamentacao = resAma.error ? [] : (resAma.data || [])
+
+      // Dúvidas pendentes vão para a seção própria; o restante do período fica em "anotações"
+      const duvidasFamilia   = resDiaDuv.error ? [] : (resDiaDuv.data || [])
+      const idsDuvidas       = new Set(duvidasFamilia.map(d => d.id))
+      const anotacoesFamilia = (resDiaPer.error ? [] : (resDiaPer.data || []))
+        .filter(a => !idsDuvidas.has(a.id))
 
       const diasSet = new Set([
         ...sintomas.map(r    => r.recorded_at?.slice(0, 10)),
@@ -77,6 +103,8 @@ export function useRelatorio() {
         sintomas,
         sono,
         amamentacao,
+        duvidasFamilia,
+        anotacoesFamilia,
         periodo:  { inicio: dataInicio, fim: dataFim },
         geradoEm: new Date().toISOString(),
         stats: {

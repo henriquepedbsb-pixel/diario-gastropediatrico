@@ -14,6 +14,7 @@ const EVENT_TYPES = {
   medication:    { label: 'Medicamento',      emoji: '💊', color: 'bg-teal-100 text-teal-700'      },
   crying:        { label: 'Choro/Cólica',     emoji: '😢', color: 'bg-red-100 text-red-700'        },
   food:          { label: 'Introdução Alim.', emoji: '🥣', color: 'bg-green-100 text-green-700'    },
+  journal:       { label: 'Anotação',         emoji: '📝', color: 'bg-amber-100 text-amber-800'    },
 }
 
 const MEAL_LABELS = {
@@ -41,7 +42,8 @@ export default function TabTimeline({ patient }) {
       supabase.from('medications').select('id,start_date,name,dose').eq('patient_id', pid).limit(30),
       supabase.from('crying_records').select('id,recorded_at,duration_min,intensity').eq('patient_id', pid).limit(50),
       supabase.from('food_introductions').select('id,introduced_at,food_name,reaction').eq('patient_id', pid).limit(50),
-    ]).then(([meals, stools, sleep, symptoms, bf, docs, meds, crying, foods]) => {
+      supabase.from('family_journal_entries').select('id,entry_at,content,visibility').eq('patient_id', pid).order('entry_at', { ascending: false }).limit(50),
+    ]).then(([meals, stools, sleep, symptoms, bf, docs, meds, crying, foods, journal]) => {
       const all = [
         ...(meals.data ?? []).map(e => ({
           id: `meal-${e.id}`, type: 'meal', date: e.eaten_at,
@@ -78,6 +80,10 @@ export default function TabTimeline({ patient }) {
         ...(foods.data ?? []).map(e => ({
           id: `food-${e.id}`, type: 'food', date: e.introduced_at + 'T12:00:00',
           desc: e.food_name + (e.reaction ? ` · ${e.reaction}` : ''),
+        })),
+        ...(journal.data ?? []).map(e => ({
+          id: `journal-${e.id}`, type: 'journal', date: e.entry_at,
+          desc: (e.visibility === 'private' ? '🔒 ' : '') + (e.content ?? ''),
         })),
       ]
       const sorted = all.filter(e => e.date).sort((a, b) => new Date(b.date) - new Date(a.date))

@@ -90,6 +90,26 @@ function lbl(dict, key) {
 
 function str(v) { return (v != null && v !== '') ? String(v) : null }
 
+/* Texto livre da família: a fonte Helvetica do PDF só cobre Latin-1,
+   então emojis e símbolos fora dessa faixa são removidos. */
+function textoFamilia(v) {
+  if (v == null) return '—'
+  return String(v)
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/[^\u0009\u000A\u000D\u0020-\u007E\u00A0-\u00FF]/g, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim() || '—'
+}
+
+const TAG_PDF = {
+  observacao: 'Observacao', duvida: 'Duvida', marco: 'Conquista', rotina: 'Mudanca na rotina',
+}
+
 function fmtSintomas(arr) {
   if (!Array.isArray(arr) || arr.length === 0) return '—'
   return arr.map(s => lbl(L.sintoma, s)).join(' · ')
@@ -162,12 +182,12 @@ function EmptyTable() {
   )
 }
 
-function Secao({ titulo, contagem, children }) {
+function Secao({ titulo, contagem, unidade = ['registro', 'registros'], children }) {
   return (
     <View style={s.secSpacer}>
       <View style={s.secHeader} wrap={false}>
         <Text style={s.secTitulo}>{titulo}</Text>
-        <Text style={s.secCount}>{contagem} registro{contagem !== 1 ? 's' : ''}</Text>
+        <Text style={s.secCount}>{contagem} {contagem === 1 ? unidade[0] : unidade[1]}</Text>
       </View>
       {children}
     </View>
@@ -265,6 +285,40 @@ function TabelaAmamentacao({ dados }) {
   )
 }
 
+function ListaDuvidas({ dados }) {
+  return (
+    <View style={s.tabela}>
+      {dados.map((row, i) => (
+        <View key={row.id || i} style={[s.tblRow, i % 2 === 1 ? s.tblRowPar : null]} wrap={false}>
+          <Text style={[s.tblCell, { flex: 0.5, fontFamily: 'Helvetica-Bold', color: C.laranja }]}>{i + 1}.</Text>
+          <Text style={[s.tblCell, { flex: 8, lineHeight: 1.4 }]}>{textoFamilia(row.content)}</Text>
+          <Text style={[s.tblCellMut, { flex: 1.6 }]}>{fmt.data(row.entry_at)}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function TabelaAnotacoes({ dados }) {
+  if (!dados.length) return <EmptyTable />
+  return (
+    <View style={s.tabela}>
+      <View style={s.tblHead}>
+        <Text style={[s.tblHCell, { flex: 1.8 }]}>Data / Hora</Text>
+        <Text style={[s.tblHCell, { flex: 1.6 }]}>Tipo</Text>
+        <Text style={[s.tblHCell, { flex: 6.6 }]}>Anotacao da familia</Text>
+      </View>
+      {dados.map((row, i) => (
+        <View key={row.id || i} style={[s.tblRow, i % 2 === 1 ? s.tblRowPar : null]}>
+          <Text style={[s.tblCell, { flex: 1.8 }]}>{fmt.dataHora(row.entry_at)}</Text>
+          <Text style={[s.tblCellMut, { flex: 1.6 }]}>{TAG_PDF[row.tag] || 'Observacao'}</Text>
+          <Text style={[s.tblCell, { flex: 6.6, lineHeight: 1.4 }]}>{textoFamilia(row.content)}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
 function Rodape({ geradoEm }) {
   return (
     <View style={s.footer} fixed>
@@ -281,6 +335,8 @@ function Rodape({ geradoEm }) {
 
 export function RelatorioPDF({ dados }) {
   const { paciente, sintomas, sono, amamentacao, periodo, stats, geradoEm } = dados
+  const duvidasFamilia   = dados.duvidasFamilia   || []
+  const anotacoesFamilia = dados.anotacoesFamilia || []
 
   return (
     <Document
@@ -349,6 +405,13 @@ export function RelatorioPDF({ dados }) {
             ))}
           </View>
 
+          {duvidasFamilia.length > 0 && (
+            <Secao titulo="Duvidas da familia para esta consulta" contagem={duvidasFamilia.length}
+              unidade={['duvida', 'duvidas']}>
+              <ListaDuvidas dados={duvidasFamilia} />
+            </Secao>
+          )}
+
           <Secao titulo="Sintomas" contagem={sintomas.length}>
             <TabelaSintomas dados={sintomas} />
           </Secao>
@@ -359,6 +422,11 @@ export function RelatorioPDF({ dados }) {
 
           <Secao titulo="Amamentacao / Alimentacao" contagem={amamentacao.length}>
             <TabelaAmamentacao dados={amamentacao} />
+          </Secao>
+
+          <Secao titulo="Anotacoes da familia no periodo" contagem={anotacoesFamilia.length}
+            unidade={['anotacao', 'anotacoes']}>
+            <TabelaAnotacoes dados={anotacoesFamilia} />
           </Secao>
         </View>
 

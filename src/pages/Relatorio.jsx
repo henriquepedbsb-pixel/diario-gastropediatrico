@@ -232,6 +232,8 @@ export default function Relatorio() {
               <ModuloRow icone="🔴" label="Sintomas"    contagem={dados.sintomas.length} />
               <ModuloRow icone="🌙" label="Sono"        contagem={dados.sono.length} />
               <ModuloRow icone="🍼" label="Amamentação" contagem={dados.amamentacao.length} />
+              <ModuloRow icone="❓" label="Dúvidas da família (pendentes)" contagem={dados.duvidasFamilia?.length ?? 0} />
+              <ModuloRow icone="📝" label="Anotações da família"           contagem={dados.anotacoesFamilia?.length ?? 0} />
             </div>
 
             <div className="bg-sky-50 border border-sky-200 rounded-xl p-5 text-center">
