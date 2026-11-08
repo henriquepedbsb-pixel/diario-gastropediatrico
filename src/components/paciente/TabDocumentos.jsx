@@ -5,6 +5,7 @@ import { Plus, Trash2, Loader2, X, Upload, FileText, ExternalLink } from 'lucide
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { markPatientActivity } from '../../lib/utils'
+import { useUrlsAssinadas, caminhoNoBucket } from '../../lib/arquivosPrivados'
 
 const CATEGORIAS = [
   { value: 'exame',   label: 'Exame',   emoji: '🔬' },
@@ -32,6 +33,7 @@ function Modal({ title, onClose, children }) {
 export default function TabDocumentos({ patient }) {
   const { session } = useAuth()
   const [docs,     setDocs]     = useState([])
+  const urlsDocs = useUrlsAssinadas('patient-documents', docs.map(d => d.file_url))
   const [loading,  setLoading]  = useState(true)
   const [modal,    setModal]    = useState(false)
   const [saving,   setSaving]   = useState(false)
@@ -65,8 +67,7 @@ export default function TabDocumentos({ patient }) {
         .from('patient-documents')
         .upload(path, form.file)
       if (upErr) { setSaveErro(`Erro no upload: ${upErr.message}`); setSaving(false); return }
-      const { data: urlData } = supabase.storage.from('patient-documents').getPublicUrl(upData.path)
-      fileUrl = urlData.publicUrl
+      fileUrl = upData.path   // bucket privado: guarda o caminho; exibe por URL assinada
     }
     const { error } = await supabase.from('patient_documents').insert({
       patient_id:  patient.id,
@@ -84,8 +85,8 @@ export default function TabDocumentos({ patient }) {
 
   const del = async (doc) => {
     if (doc.file_url) {
-      const match = doc.file_url.match(/patient-documents\/(.+)/)
-      if (match) await supabase.storage.from('patient-documents').remove([match[1]])
+      const caminho = caminhoNoBucket('patient-documents', doc.file_url)
+      if (caminho) await supabase.storage.from('patient-documents').remove([caminho])
     }
     await supabase.from('patient_documents').delete().eq('id', doc.id)
     setDocs(d => d.filter(x => x.id !== doc.id))
@@ -128,10 +129,16 @@ export default function TabDocumentos({ patient }) {
                     </div>
                     {d.notes && <p className="text-xs text-slate-400 italic mt-0.5">{d.notes}</p>}
                     {d.file_url && (
-                      <a href={d.file_url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
-                        <ExternalLink size={11} /> Abrir arquivo
-                      </a>
+                      urlsDocs[d.file_url] ? (
+                        <a href={urlsDocs[d.file_url]} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
+                          <ExternalLink size={11} /> Abrir arquivo
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">
+                          <Loader2 size={11} className="animate-spin" /> Preparando arquivo…
+                        </span>
+                      )
                     )}
                   </div>
                   <button onClick={() => del(d)}

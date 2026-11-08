@@ -244,15 +244,19 @@ function Modal({ title, onClose, children }) {
 }
 ```
 
-### Upload de arquivo para Storage
+### Upload de arquivo para Storage (todos os buckets são PRIVADOS)
 ```js
-const path = `pasta/${patient.id}/${Date.now()}.${ext}`
+// caminho SEMPRE começa pelo id do paciente (ou "fraldas/<id>/…")
+const path = `${patient.id}/${Date.now()}.${ext}`
 const { data: upData, error } = await supabase.storage
   .from('patient-documents')
   .upload(path, file, { contentType: file.type })
-const { data: urlData } = supabase.storage.from('patient-documents').getPublicUrl(upData.path)
-const url = urlData.publicUrl
+// guarde o CAMINHO no banco (nunca getPublicUrl)
+const file_url = upData.path
 ```
+Para exibir: `src/lib/arquivosPrivados.js` → `<ImagemPrivada bucket valor />`,
+`useUrlsAssinadas(bucket, valores)` ou `urlsAssinadas(...)`. Aceitam caminho
+ou URL pública antiga (compatibilidade).
 
 ---
 

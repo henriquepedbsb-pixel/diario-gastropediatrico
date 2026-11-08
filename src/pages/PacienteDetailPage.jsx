@@ -32,6 +32,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { supabase } from '../lib/supabase'
+import { ImagemPrivada, urlsAssinadas, caminhoNoBucket } from '../lib/arquivosPrivados'
 import {
   WHO_PESO_MENINOS, WHO_PESO_MENINAS,
   WHO_ALTURA_MENINOS, WHO_ALTURA_MENINAS,
@@ -125,10 +126,7 @@ function TabDiario({ patient }) {
         return
       }
 
-      const { data: urlData } = supabase.storage
-        .from('fotos-refeicoes')
-        .getPublicUrl(upData.path)
-      photoUrl = urlData.publicUrl
+      photoUrl = upData.path   // bucket privado: guarda o caminho; exibe por URL assinada
     }
 
     const { error } = await supabase.from('meals').insert({
@@ -181,7 +179,7 @@ function TabDiario({ patient }) {
               <div key={e.id} className="card overflow-hidden">
                 {e.photo_url && (
                   <div className="w-full aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
-                    <img src={e.photo_url} alt="foto da refeição"
+                    <ImagemPrivada bucket="fotos-refeicoes" valor={e.photo_url} alt="foto da refeição"
                       className="w-full h-full object-contain" />
                   </div>
                 )}
@@ -585,15 +583,6 @@ function TabGraficos({ patient }) {
   )
 }
 
-/* helper: extrai storage path de uma file_url (path simples ou URL legada) */
-function extractStoragePath(fileUrl) {
-  if (!fileUrl) return null
-  if (fileUrl.startsWith('http')) {
-    const match = fileUrl.match(/\/prescricoes\/(.+)/)
-    return match ? match[1] : null
-  }
-  return fileUrl
-}
 
 /* ═══════════════════════════════════════════
    ABA 3 — RECEITAS MÉDICAS
@@ -621,15 +610,10 @@ function TabReceitas({ patient }) {
     const { data } = await supabase.from('prescriptions')
       .select('*').eq('patient_id', patient.id)
       .order('prescribed_at', { ascending: false })
-    const rows = (data ?? []).map(r => {
-      if (!r.file_url) return r
-      const storagePath = extractStoragePath(r.file_url)
-      if (!storagePath) return r
-      const { data: urlData } = supabase.storage
-        .from('prescricoes')
-        .getPublicUrl(storagePath)
-      return { ...r, _publicUrl: urlData.publicUrl }
-    })
+    const lista = data ?? []
+    // bucket privado: links temporários (URL assinada) para os arquivos
+    const urls = await urlsAssinadas('prescricoes', lista.map(r => r.file_url)).catch(() => ({}))
+    const rows = lista.map(r => (r.file_url && urls[r.file_url] ? { ...r, _publicUrl: urls[r.file_url] } : r))
     setReceitas(rows)
     setLoading(false)
   }
@@ -1099,19 +1083,19 @@ function TabCadastro({ patient, onUpdate }) {
     setPhotoError(null)
     try {
       const ext  = file.name.split('.').pop().toLowerCase()
-      const path = `${patient.id}/photo.${ext}`
+      // nome único por envio: evita foto antiga presa no cache do navegador
+      const path = `${patient.id}/photo-${Date.now()}.${ext}`
       const { error: upErr } = await supabase.storage
         .from('patient-photos')
-        .upload(path, file, { upsert: true })
+        .upload(path, file, { upsert: false })
       if (upErr) throw new Error(`Storage: ${upErr.message}`)
-      const { data: { publicUrl } } = supabase.storage
-        .from('patient-photos')
-        .getPublicUrl(path)
       const { error: dbErr } = await supabase
         .from('patients')
-        .update({ photo_url: publicUrl })
+        .update({ photo_url: path })   // bucket privado: guarda o caminho
         .eq('id', patient.id)
       if (dbErr) throw new Error(`DB: ${dbErr.message}`)
+      const anterior = caminhoNoBucket('patient-photos', patient.photo_url)
+      if (anterior && anterior !== path) supabase.storage.from('patient-photos').remove([anterior]).catch(() => {})
       onUpdate()
     } catch (err) {
       console.error('Erro ao enviar foto:', err.message)
@@ -1122,7 +1106,9 @@ function TabCadastro({ patient, onUpdate }) {
   }
 
   const handleRemovePhoto = async () => {
+    const anterior = caminhoNoBucket('patient-photos', patient.photo_url)
     await supabase.from('patients').update({ photo_url: null }).eq('id', patient.id)
+    if (anterior) supabase.storage.from('patient-photos').remove([anterior]).catch(() => {})
     onUpdate()
   }
 
@@ -1250,7 +1236,7 @@ function TabCadastro({ patient, onUpdate }) {
             <div className="flex items-center gap-4">
               <div className="relative">
                 {patient.photo_url ? (
-                  <img src={patient.photo_url} alt={patient.name}
+                  <ImagemPrivada bucket="patient-photos" valor={patient.photo_url} alt={patient.name}
                     className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-200" />
                 ) : (
                   <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold
@@ -1844,7 +1830,7 @@ export default function PacienteDetailPage() {
 
           <div className="w-14 h-14 rounded-2xl shrink-0 overflow-hidden">
             {patient.photo_url ? (
-              <img src={patient.photo_url} alt={patient.name}
+              <ImagemPrivada bucket="patient-photos" valor={patient.photo_url} alt={patient.name}
                 className="w-full h-full object-cover" />
             ) : (
               <div className={`w-full h-full ${avatarColor} flex items-center justify-center`}>
