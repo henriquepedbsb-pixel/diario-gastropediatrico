@@ -90,7 +90,7 @@ O app tem **dois tipos de usuário** com experiências completamente separadas:
 - Acessa `PacienteDetailPage` → `/dashboard/pacientes/:id?tab=X`
 - Pode cadastrar pacientes, publicar dicas, exportar PDF/Excel
 - Recebe notificações de nova atividade (badge laranja + Supabase Realtime)
-- Código de convite para cadastro: `GASTRO2024`
+- Cadastro de médico: código de convite validado no servidor (`redeem_doctor_invite`). Códigos são criados no SQL Editor com `create_doctor_invite(...)` e **nunca** ficam no código/repositório. O papel (`profiles.role`) só muda no servidor — trigger `trg_profiles_guard_role`.
 
 ### Responsável (`role: 'parent'`)
 - Rota base: `/diario`

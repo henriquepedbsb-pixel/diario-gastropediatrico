@@ -214,12 +214,21 @@ Todas têm `patient_id uuid REFERENCES patients(id) ON DELETE CASCADE` e `create
 
 ## Row Level Security (RLS)
 
-A maioria das tabelas de registros clínicos usa:
+Todas as tabelas de registros clínicos usam o par de políticas abaixo
+(**nunca** `USING (true)` — corrigido em `security-hardening-migration.sql`):
 ```sql
-CREATE POLICY "allow authenticated"
-  ON tabela FOR ALL TO authenticated
-  USING (true) WITH CHECK (true);
+-- médico: tudo
+CREATE POLICY tabela_doctor_all ON tabela FOR ALL TO authenticated
+  USING      (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'doctor'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'doctor'));
+-- família: só o próprio filho
+CREATE POLICY tabela_parent_all ON tabela FOR ALL TO authenticated
+  USING      (patient_id IN (SELECT id FROM patients WHERE parent_id = auth.uid()))
+  WITH CHECK (patient_id IN (SELECT id FROM patients WHERE parent_id = auth.uid()));
 ```
+
+`profiles.role` é protegido por trigger: perfil novo nasce `'parent'` e só vira
+`'doctor'` pela função `redeem_doctor_invite(code)` (convite com hash no banco).
 
 `patient_requests` tem políticas mais granulares:
 - Responsável: INSERT próprio + SELECT próprio
