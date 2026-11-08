@@ -21,6 +21,7 @@ import TabMedicamentos       from '../components/paciente/TabMedicamentos'
 import TabChoro              from '../components/paciente/TabChoro'
 import TabTimeline           from '../components/paciente/TabTimeline'
 import TabDiarioFamilia      from '../components/paciente/TabDiarioFamilia'
+import TabExamesMedico       from '../components/paciente/TabExamesMedico'
 import { exportPatientPDF }  from '../lib/exportPDF'
 import { exportPatientExcel } from '../lib/exportExcel'
 import { useAuth } from '../contexts/AuthContext'
@@ -1959,6 +1960,7 @@ export default function PacienteDetailPage() {
             {activeTab === 'graficosfezes'  && <TabIntestinal          patient={patient} />}
             {activeTab === 'timeline'       && <TabTimeline            patient={patient} />}
             {activeTab === 'diariofamilia'  && <TabDiarioFamilia       patient={patient} />}
+            {activeTab === 'exames'         && <TabExamesMedico        patient={patient} />}
           </div>
           </div>
         </div>
