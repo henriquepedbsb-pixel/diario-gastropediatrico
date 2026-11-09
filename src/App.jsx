@@ -1,24 +1,28 @@
+import { Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { isDoctor, isPai } from './lib/utils'
 import Layout from './components/layout/Layout'
 import LoadingScreen from './components/ui/LoadingScreen'
 import LoginPage from './pages/auth/LoginPage'
-import RegisterPage from './pages/auth/RegisterPage'
-import HomePage from './pages/HomePage'
-import NovoPacientePage from './pages/NovoPacientePage'
-import PacienteDetailPage from './pages/PacienteDetailPage'
-import DiarioPage from './pages/DiarioPage'
-import DicasPage from './pages/DicasPage'
-import CurriculoPage from './pages/CurriculoPage'
-import ClinicasPage  from './pages/ClinicasPage'
-import DepoimentosPage from './pages/DepoimentosPage'
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
-import Relatorio from './pages/Relatorio'
-import Exames from './pages/Exames'
-import DiarioPrivativo from './pages/DiarioPrivativo'
-import ConvitePage from './pages/ConvitePage'
+import lazyComRecarga from './lib/lazyComRecarga'
+
+/* Telas carregadas sob demanda — só o login vem no primeiro download */
+const RegisterPage       = lazyComRecarga(() => import('./pages/auth/RegisterPage'))
+const HomePage           = lazyComRecarga(() => import('./pages/HomePage'))
+const NovoPacientePage   = lazyComRecarga(() => import('./pages/NovoPacientePage'))
+const PacienteDetailPage = lazyComRecarga(() => import('./pages/PacienteDetailPage'))
+const DiarioPage         = lazyComRecarga(() => import('./pages/DiarioPage'))
+const DicasPage          = lazyComRecarga(() => import('./pages/DicasPage'))
+const CurriculoPage      = lazyComRecarga(() => import('./pages/CurriculoPage'))
+const ClinicasPage       = lazyComRecarga(() => import('./pages/ClinicasPage'))
+const DepoimentosPage    = lazyComRecarga(() => import('./pages/DepoimentosPage'))
+const ForgotPasswordPage = lazyComRecarga(() => import('./pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage  = lazyComRecarga(() => import('./pages/auth/ResetPasswordPage'))
+const Relatorio          = lazyComRecarga(() => import('./pages/Relatorio'))
+const Exames             = lazyComRecarga(() => import('./pages/Exames'))
+const DiarioPrivativo    = lazyComRecarga(() => import('./pages/DiarioPrivativo'))
+const ConvitePage        = lazyComRecarga(() => import('./pages/ConvitePage'))
 
 /* ── Redireciona após login baseado no perfil ── */
 function RootRedirect() {
@@ -67,6 +71,7 @@ function PublicOnly({ children }) {
 export default function App() {
   return (
     <AuthProvider>
+      <Suspense fallback={<LoadingScreen />}>
       <Routes>
         {/* Públicas */}
         <Route path="/login"           element={<PublicOnly><LoginPage /></PublicOnly>} />
@@ -104,6 +109,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </AuthProvider>
   )
 }

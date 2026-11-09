@@ -1,8 +1,19 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import BrandMark from './BrandMark'
 import Sidebar from './Sidebar'
+
+function CarregandoTela() {
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-4" aria-busy="true" aria-label="Carregando">
+      <div className="h-24 rounded-3xl bg-slate-200/70 animate-pulse" />
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        {[...Array(8)].map((_, i) => <div key={i} className="h-24 rounded-2xl bg-slate-200/50 animate-pulse" />)}
+      </div>
+    </div>
+  )
+}
 
 export default function Layout() {
   const [open, setOpen] = useState(false)
@@ -35,7 +46,9 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          <Suspense fallback={<CarregandoTela />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

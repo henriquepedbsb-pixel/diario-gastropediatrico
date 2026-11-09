@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { markPatientActivity } from '../lib/utils'
 import { format, parseISO, differenceInMonths, differenceInYears, formatDistanceToNow } from 'date-fns'
@@ -22,7 +22,6 @@ import TabAlertas            from '../components/paciente/TabAlertas'
 import TabDocumentos         from '../components/paciente/TabDocumentos'
 import TabCalculadora        from '../components/paciente/TabCalculadora'
 import TabFAQ                from '../components/paciente/TabFAQ'
-import TabGraficoFezes       from '../components/paciente/TabGraficoFezes'
 import TabFraldas            from '../components/paciente/TabFraldas'
 import TabIntroducaoAlimentar from '../components/paciente/TabIntroducaoAlimentar'
 import TabMedicamentos       from '../components/paciente/TabMedicamentos'
@@ -30,8 +29,19 @@ import TabChoro              from '../components/paciente/TabChoro'
 import TabExamesFamilia      from '../components/paciente/TabExamesFamilia'
 import TabMeuDiario          from '../components/paciente/TabMeuDiario'
 import TabTimeline           from '../components/paciente/TabTimeline'
-import TabCrescimentoFamilia from '../components/paciente/TabCrescimentoFamilia'
 import { hojeLocal }         from '../hooks/useDiarioFamilia'
+import lazyComRecarga       from '../lib/lazyComRecarga'
+
+/* Abas com gráficos (biblioteca pesada) só baixam quando abertas */
+const TabGraficoFezes       = lazyComRecarga(() => import('../components/paciente/TabGraficoFezes'))
+const TabCrescimentoFamilia = lazyComRecarga(() => import('../components/paciente/TabCrescimentoFamilia'))
+
+const CarregandoAba = () => (
+  <div className="space-y-3" aria-busy="true" aria-label="Carregando">
+    <div className="h-10 w-48 rounded-full bg-slate-200/70 animate-pulse" />
+    <div className="h-64 rounded-2xl bg-slate-200/50 animate-pulse" />
+  </div>
+)
 
 /* ─── helpers ─── */
 
@@ -1818,7 +1828,7 @@ function TabIntestinal({ patient }) {
         ))}
       </div>
       {subTab === 'habito'   && <TabFezes        patient={patient} />}
-      {subTab === 'evolucao' && <TabGraficoFezes patient={patient} />}
+      {subTab === 'evolucao' && <Suspense fallback={<CarregandoAba />}><TabGraficoFezes patient={patient} /></Suspense>}
       {subTab === 'fraldas'  && <TabFraldas      patient={patient} />}
     </div>
   )
@@ -1936,7 +1946,7 @@ export default function DiarioPage() {
           {tab === 'exames'         && <TabExamesFamilia       patient={paciente} />}
           {tab === 'meudiario'      && <TabMeuDiario           patient={paciente} />}
           {tab === 'timeline'       && <TabTimeline            patient={paciente} />}
-          {tab === 'crescimento'    && <TabCrescimentoFamilia  patient={paciente} />}
+          {tab === 'crescimento'    && <Suspense fallback={<CarregandoAba />}><TabCrescimentoFamilia patient={paciente} /></Suspense>}
         </div>
       </div>
     </div>
