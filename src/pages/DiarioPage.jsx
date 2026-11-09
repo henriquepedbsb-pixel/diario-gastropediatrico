@@ -1837,7 +1837,7 @@ const TABS = [
 ]
 
 export default function DiarioPage() {
-  const { paciente, profile, refreshPaciente } = useAuth()
+  const { paciente, pacientes, selecionarPaciente, profile, refreshPaciente } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab    = searchParams.get('tab') || 'resumo'
   const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
@@ -1883,12 +1883,35 @@ export default function DiarioPage() {
             </div>
           </div>
 
+          {/* Irmãos — trocar de criança */}
+          {pacientes.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label="Escolher criança">
+              {pacientes.map(p => {
+                const ativo = p.id === paciente.id
+                return (
+                  <button key={p.id} role="tab" aria-selected={ativo}
+                    onClick={() => selecionarPaciente(p.id)}
+                    className={`shrink-0 inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border text-sm font-semibold transition-all active:scale-95
+                      ${ativo ? 'bg-noite text-white border-noite' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                    <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold
+                      ${p.photo_url ? '' : p.gender === 'F' ? 'bg-pink-100 text-pink-700' : p.gender === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {p.photo_url
+                        ? <ImagemPrivada bucket="patient-photos" valor={p.photo_url} alt="" className="w-full h-full object-cover" />
+                        : (p.name?.charAt(0).toUpperCase() ?? '?')}
+                    </span>
+                    {(p.name ?? '').trim().split(' ')[0]}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
         </div>
       </div>
 
       {/* Conteúdo principal — largura total */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        <div key={tab} className="max-w-6xl mx-auto tab-enter">
+        <div key={`${paciente.id}-${tab}`} className="max-w-6xl mx-auto tab-enter">
           {tab === 'resumo'         && <TabResumo         patient={paciente} onNavigate={setTab} />}
           {tab === 'cadastro'       && <TabCadastroPai    patient={paciente} onUpdate={refreshPaciente} />}
           {tab === 'refeicoes'      && <TabRefeicoes      patient={paciente} />}
