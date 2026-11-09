@@ -25,8 +25,6 @@ import TabExamesMedico       from '../components/paciente/TabExamesMedico'
 import ConviteFamiliaModal   from '../components/paciente/ConviteFamiliaModal'
 import CurvasCrescimento     from '../components/crescimento/CurvasCrescimento'
 import { formatarIG, ehPrematuro } from '../lib/crescimento'
-import { exportPatientPDF }  from '../lib/exportPDF'
-import { exportPatientExcel } from '../lib/exportExcel'
 import { useAuth } from '../contexts/AuthContext'
 import { format, parseISO, differenceInMonths, differenceInYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -1938,6 +1936,7 @@ export default function PacienteDetailPage() {
                       supabase.from('food_introductions').select('*').eq('patient_id', patient.id),
                       supabase.from('crying_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }).limit(30),
                     ])
+                    const { exportPatientPDF } = await import('../lib/exportPDF')
                     exportPatientPDF(patient, { stools: s.data, medications: m.data, symptoms: sy.data, sleep: sl.data, foods: f.data, crying: c.data })
                   }}
                   title="Exportar PDF"
@@ -1956,6 +1955,7 @@ export default function PacienteDetailPage() {
                       supabase.from('food_introductions').select('*').eq('patient_id', patient.id),
                       supabase.from('crying_records').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }),
                     ])
+                    const { exportPatientExcel } = await import('../lib/exportExcel')
                     exportPatientExcel(patient, { stools: s.data, meals: m.data, symptoms: sy.data, sleep: sl.data, medications: me.data, foods: f.data, crying: c.data })
                   }}
                   title="Exportar Excel"
