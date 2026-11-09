@@ -7,10 +7,57 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [session,  setSession]  = useState(null)
   const [profile,  setProfile]  = useState(null)
-  const [paciente, setPaciente] = useState(null)
+  const [pacientes, setPacientes] = useState([])     // todas as crianças da conta (irmãos)
+  const [paciente,  setPaciente]  = useState(null)   // criança selecionada
   const [loading,  setLoading]  = useState(true)   // começa true — só false depois da 1ª verificação
   const duranteSignup    = useRef(false)
   const perfilCarregado  = useRef(null)   // userId do último perfil setado manualmente
+
+  /* ─── crianças da conta (irmãos) ─── */
+  const CHAVE_ATIVO = 'pd_paciente_ativo'
+
+  // Escolhe a criança ativa: a última selecionada neste aparelho, senão a primeira
+  const aplicarPacientes = (lista) => {
+    const ordenada = [...(lista ?? [])].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR'))
+    let salvo = null
+    try { salvo = localStorage.getItem(CHAVE_ATIVO) } catch { /* modo privado */ }
+    setPacientes(ordenada)
+    setPaciente(ordenada.find(p => p.id === salvo) ?? ordenada[0] ?? null)
+  }
+
+  // Vincula TODAS as crianças cadastradas pelo médico com este e-mail (irmãos)
+  const vincularPendentesPorEmail = async (userId, email) => {
+    if (!email) return []
+    const { data: pendentes } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('parent_email', email.toLowerCase())
+      .is('parent_id', null)
+    const vinculados = []
+    for (const pendente of pendentes ?? []) {
+      // Limpa pending_parent_email do notes ao vincular
+      let updatedNotes = null
+      try {
+        const notesObj = pendente.notes ? JSON.parse(pendente.notes) : {}
+        delete notesObj.pending_parent_email
+        updatedNotes = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
+      } catch { updatedNotes = null }
+      const { error } = await supabase
+        .from('patients')
+        .update({ parent_id: userId, parent_email: null, notes: updatedNotes })
+        .eq('id', pendente.id)
+      if (!error) vinculados.push({ ...pendente, parent_id: userId, parent_email: null, notes: updatedNotes })
+    }
+    if (vinculados.length) console.log('[Auth] auto-vínculo por e-mail:', vinculados.map(v => v.id))
+    return vinculados
+  }
+
+  const selecionarPaciente = (id) => {
+    const alvo = pacientes.find(p => p.id === id)
+    if (!alvo) return
+    try { localStorage.setItem(CHAVE_ATIVO, id) } catch { /* modo privado */ }
+    setPaciente(alvo)
+  }
 
   /* ─── busca perfil no banco ─── */
   const carregarPerfil = async (userId, userEmail) => {
@@ -59,45 +106,19 @@ export function AuthProvider({ children }) {
       setProfile(profileFinal)
 
       if (isPai(role)) {
-        // 1ª tentativa: já vinculado por parent_id
-        let { data: pac } = await supabase
+        // Crianças já vinculadas (pode haver irmãos)
+        const { data: vinculados } = await supabase
           .from('patients')
           .select('*')
           .eq('parent_id', userId)
-          .maybeSingle()
 
-        // 2ª tentativa: médico cadastrou o e-mail mas responsável ainda não tinha conta
-        if (!pac && userEmail) {
-          try {
-            const { data: pendente } = await supabase
-              .from('patients')
-              .select('*')
-              .eq('parent_email', userEmail.toLowerCase())
-              .is('parent_id', null)
-              .maybeSingle()
+        // Médico cadastrou o e-mail mas o responsável ainda não tinha conta
+        let novos = []
+        try { novos = await vincularPendentesPorEmail(userId, userEmail) }
+        catch (linkErr) { console.warn('[Auth] verificação de parent_email falhou:', linkErr.message) }
 
-            if (pendente) {
-              // Limpa pending_parent_email do notes ao vincular
-              let updatedNotes = null
-              try {
-                const notesObj = pendente.notes ? JSON.parse(pendente.notes) : {}
-                delete notesObj.pending_parent_email
-                updatedNotes = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
-              } catch { updatedNotes = null }
-
-              await supabase
-                .from('patients')
-                .update({ parent_id: userId, parent_email: null, notes: updatedNotes })
-                .eq('id', pendente.id)
-              pac = { ...pendente, parent_id: userId, parent_email: null, notes: updatedNotes }
-              console.log('[Auth] auto-vínculo por e-mail para paciente', pendente.id)
-            }
-          } catch (linkErr) {
-            console.warn('[Auth] verificação de parent_email falhou:', linkErr.message)
-          }
-        }
-
-        setPaciente(pac ?? null)
+        const ids = new Set()
+        aplicarPacientes([...(vinculados ?? []), ...novos].filter(p => !ids.has(p.id) && ids.add(p.id)))
       }
     } catch (err) {
       console.error('[Auth] carregarPerfil erro:', err.message)
@@ -114,6 +135,7 @@ export function AuthProvider({ children }) {
       if (!sess || event === 'SIGNED_OUT') {
         setSession(null)
         setProfile(null)
+        setPacientes([])
         setPaciente(null)
         setLoading(false)
         return
@@ -196,41 +218,16 @@ export function AuthProvider({ children }) {
         .insert({ id: uid, role: 'parent', full_name })
       if (pe) throw pe
 
-      // Verifica vínculo pendente — isolado para não bloquear o cadastro se falhar
-      let pac = null
-      try {
-        const { data: pendente } = await supabase
-          .from('patients')
-          .select('*')
-          .eq('parent_email', email.toLowerCase())
-          .is('parent_id', null)
-          .maybeSingle()
-
-        if (pendente) {
-          // Limpa pending_parent_email do notes ao vincular
-          let updatedNotes = null
-          try {
-            const notesObj = pendente.notes ? JSON.parse(pendente.notes) : {}
-            delete notesObj.pending_parent_email
-            updatedNotes = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
-          } catch { updatedNotes = null }
-
-          await supabase
-            .from('patients')
-            .update({ parent_id: uid, parent_email: null, notes: updatedNotes })
-            .eq('id', pendente.id)
-          pac = { ...pendente, parent_id: uid, parent_email: null, notes: updatedNotes }
-          console.log('[Auth] vínculo automático no cadastro, paciente:', pendente.id)
-        }
-      } catch (linkErr) {
-        console.warn('[Auth] verificação de vínculo pendente falhou:', linkErr.message)
-      }
+      // Vincula crianças pendentes (irmãos) — isolado para não bloquear o cadastro se falhar
+      let novos = []
+      try { novos = await vincularPendentesPorEmail(uid, email) }
+      catch (linkErr) { console.warn('[Auth] verificação de vínculo pendente falhou:', linkErr.message) }
 
       // Atualiza todo o estado de uma vez e libera o loading
       perfilCarregado.current = uid   // sinaliza que o próximo evento de auth pode ser ignorado
       setSession(data.session)
       setProfile({ id: uid, role: 'pai', full_name })    // interno: 'pai'
-      setPaciente(pac)
+      aplicarPacientes(novos)
       setLoading(false)
       return data
     } finally {
@@ -246,7 +243,10 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', paciente.id)
       .single()
-    if (data) setPaciente(data)
+    if (data) {
+      setPaciente(data)
+      setPacientes(lista => lista.map(p => (p.id === data.id ? data : p)))
+    }
   }
 
   /* ─── logout ─── */
@@ -256,7 +256,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      session, profile, paciente, loading,
+      session, profile, paciente, pacientes, selecionarPaciente, loading,
       signIn, signOut, signUpMedico, signUpPai, refreshPaciente,
     }}>
       {children}
