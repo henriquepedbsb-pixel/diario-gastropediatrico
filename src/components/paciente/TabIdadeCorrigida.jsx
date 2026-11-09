@@ -14,7 +14,7 @@ const MARCOS = [
 ]
 
 export default function TabIdadeCorrigida({ patient }) {
-  const [igSemanas, setIgSemanas] = useState('')
+  const [igSemanas, setIgSemanas] = useState(patient?.gestational_age_weeks ? String(patient.gestational_age_weeks) : '')
 
   const ig = parseInt(igSemanas)
   const igValida = !isNaN(ig) && ig >= 22 && ig <= 41

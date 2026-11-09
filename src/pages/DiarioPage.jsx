@@ -30,6 +30,7 @@ import TabChoro              from '../components/paciente/TabChoro'
 import TabExamesFamilia      from '../components/paciente/TabExamesFamilia'
 import TabMeuDiario          from '../components/paciente/TabMeuDiario'
 import TabTimeline           from '../components/paciente/TabTimeline'
+import TabCrescimentoFamilia from '../components/paciente/TabCrescimentoFamilia'
 import { hojeLocal }         from '../hooks/useDiarioFamilia'
 
 /* ─── helpers ─── */
@@ -1935,6 +1936,7 @@ export default function DiarioPage() {
           {tab === 'exames'         && <TabExamesFamilia       patient={paciente} />}
           {tab === 'meudiario'      && <TabMeuDiario           patient={paciente} />}
           {tab === 'timeline'       && <TabTimeline            patient={paciente} />}
+          {tab === 'crescimento'    && <TabCrescimentoFamilia  patient={paciente} />}
         </div>
       </div>
     </div>
