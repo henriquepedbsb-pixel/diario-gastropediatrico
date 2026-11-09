@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { ArrowLeft, Baby, Users, Scale, X, Plus, Loader2, Mail, Lock } from 'lucide-react'
+import { ArrowLeft, Baby, Users, Scale, X, Plus, Loader2, Lock, QrCode } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlano } from '../hooks/usePlano'
@@ -81,22 +81,11 @@ export default function NovoPacientePage() {
     setLoading(true)
     setErro('')
     try {
-      // ── Tenta resolver o UUID do responsável pelo e-mail ──
-      const emailResp = values.parent_email?.trim().toLowerCase() || null
-      let parentId    = null
-
-      if (emailResp) {
-        const { data: uid } = await supabase
-          .rpc('get_user_id_by_email', { email_input: emailResp })
-        parentId = uid ?? null
-      }
-
-      // ── Monta notes: dados dos pais + pending_parent_email se necessário ──
+      // ── Monta notes: dados dos pais ──
       const notesObj = {}
       if (values.father_name?.trim()) notesObj.pai  = values.father_name.trim()
       if (values.mother_name?.trim()) notesObj.mae  = values.mother_name.trim()
       if (values.notes?.trim())       notesObj.notas = values.notes.trim()
-      if (emailResp && !parentId)     notesObj.pending_parent_email = emailResp
       const notesJson = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
 
       // ── Insere o paciente ──
@@ -109,8 +98,7 @@ export default function NovoPacientePage() {
           blood_type:   values.blood_type || null,
           allergies:    allergies.length  ? allergies : null,
           notes:        notesJson,
-          parent_id:    parentId,          // UUID do responsável se já tem conta, null se não
-          parent_email: parentId ? null : emailResp,  // coluna dedicada para busca eficiente
+          // família é vinculada pelo convite (link/QR), aberto logo após salvar
         })
         .select()
         .single()
@@ -135,7 +123,7 @@ export default function NovoPacientePage() {
         if (growthError) throw growthError
       }
 
-      navigate(`/dashboard/pacientes/${patient.id}`)
+      navigate(`/dashboard/pacientes/${patient.id}?convite=1`)
     } catch (err) {
       setErro(err.message ?? 'Erro ao salvar. Tente novamente.')
     } finally {
@@ -267,24 +255,14 @@ export default function NovoPacientePage() {
             </Field>
           </div>
 
-          {/* E-mail do responsável para vínculo no app */}
-          <Field
-            label="E-mail do responsável no app"
-            hint="Se o responsável já tiver conta, será vinculado automaticamente. Caso contrário, o vínculo ocorre no primeiro login."
-            error={errors.parent_email?.message}
-          >
-            <div className="relative">
-              <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="email"
-                className="input pl-9"
-                placeholder="email@responsavel.com"
-                {...register('parent_email', {
-                  pattern: { value: /\S+@\S+\.\S+/, message: 'E-mail inválido' },
-                })}
-              />
-            </div>
-          </Field>
+          {/* Acesso da família: por convite */}
+          <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl p-3">
+            <QrCode size={16} className="text-blue-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-800 leading-relaxed">
+              Depois de salvar, você gera o <strong>convite da família</strong> (QR code ou link pelo WhatsApp).
+              A família cria a senha e já entra vinculada a esta criança.
+            </p>
+          </div>
         </div>
 
         {/* ── Dados de Nascimento ── */}

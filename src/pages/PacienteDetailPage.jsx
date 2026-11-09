@@ -1755,6 +1755,14 @@ export default function PacienteDetailPage() {
 
   const [confirmDel,     setConfirmDel]     = useState(false)
   const [convite,        setConvite]        = useState(false)
+
+  // Recém-cadastrado (?convite=1): abre o convite da família automaticamente
+  useEffect(() => {
+    if (searchParams.get('convite') !== '1' || !patient) return
+    if (!patient.parent_id) setConvite(true)
+    const p = new URLSearchParams(searchParams); p.delete('convite')
+    setSearchParams(p, { replace: true })
+  }, [patient, searchParams, setSearchParams])
   const [deletando,      setDeletando]      = useState(false)
 
   const handleDeletePaciente = async () => {
