@@ -25,33 +25,6 @@ export function AuthProvider({ children }) {
     setPaciente(ordenada.find(p => p.id === salvo) ?? ordenada[0] ?? null)
   }
 
-  // Vincula TODAS as crianças cadastradas pelo médico com este e-mail (irmãos)
-  const vincularPendentesPorEmail = async (userId, email) => {
-    if (!email) return []
-    const { data: pendentes } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('parent_email', email.toLowerCase())
-      .is('parent_id', null)
-    const vinculados = []
-    for (const pendente of pendentes ?? []) {
-      // Limpa pending_parent_email do notes ao vincular
-      let updatedNotes = null
-      try {
-        const notesObj = pendente.notes ? JSON.parse(pendente.notes) : {}
-        delete notesObj.pending_parent_email
-        updatedNotes = Object.keys(notesObj).length ? JSON.stringify(notesObj) : null
-      } catch { updatedNotes = null }
-      const { error } = await supabase
-        .from('patients')
-        .update({ parent_id: userId, parent_email: null, notes: updatedNotes })
-        .eq('id', pendente.id)
-      if (!error) vinculados.push({ ...pendente, parent_id: userId, parent_email: null, notes: updatedNotes })
-    }
-    if (vinculados.length) console.log('[Auth] auto-vínculo por e-mail:', vinculados.map(v => v.id))
-    return vinculados
-  }
-
   const selecionarPaciente = (id) => {
     const alvo = pacientes.find(p => p.id === id)
     if (!alvo) return
@@ -106,19 +79,13 @@ export function AuthProvider({ children }) {
       setProfile(profileFinal)
 
       if (isPai(role)) {
-        // Crianças já vinculadas (pode haver irmãos)
+        // Crianças vinculadas a esta conta (pode haver irmãos).
+        // Vínculo novo só por convite (link/QR) ou pedido aprovado pelo médico.
         const { data: vinculados } = await supabase
           .from('patients')
           .select('*')
           .eq('parent_id', userId)
-
-        // Médico cadastrou o e-mail mas o responsável ainda não tinha conta
-        let novos = []
-        try { novos = await vincularPendentesPorEmail(userId, userEmail) }
-        catch (linkErr) { console.warn('[Auth] verificação de parent_email falhou:', linkErr.message) }
-
-        const ids = new Set()
-        aplicarPacientes([...(vinculados ?? []), ...novos].filter(p => !ids.has(p.id) && ids.add(p.id)))
+        aplicarPacientes(vinculados ?? [])
       }
     } catch (err) {
       console.error('[Auth] carregarPerfil erro:', err.message)
@@ -218,16 +185,12 @@ export function AuthProvider({ children }) {
         .insert({ id: uid, role: 'parent', full_name })
       if (pe) throw pe
 
-      // Vincula crianças pendentes (irmãos) — isolado para não bloquear o cadastro se falhar
-      let novos = []
-      try { novos = await vincularPendentesPorEmail(uid, email) }
-      catch (linkErr) { console.warn('[Auth] verificação de vínculo pendente falhou:', linkErr.message) }
-
+      // Conta nova começa sem criança: o vínculo vem pelo convite do médico
       // Atualiza todo o estado de uma vez e libera o loading
       perfilCarregado.current = uid   // sinaliza que o próximo evento de auth pode ser ignorado
       setSession(data.session)
       setProfile({ id: uid, role: 'pai', full_name })    // interno: 'pai'
-      aplicarPacientes(novos)
+      aplicarPacientes([])
       setLoading(false)
       return data
     } finally {

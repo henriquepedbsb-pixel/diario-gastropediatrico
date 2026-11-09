@@ -286,3 +286,16 @@ Exibe notificação do browser se `Notification.permission === 'granted'`.
 - Trigger `trg_patients_enforce_limit` bloqueia INSERT acima do limite (mensagem amigável).
 - Front: `usePlano()` (rpc `my_plan`) + `PlanoCard`; checkout em `VITE_HOTMART_CHECKOUT_URL`.
 - Storage: políticas `ps_*` por bucket, pasta = id do paciente (`fraldas/{id}/…` em patient-documents).
+
+
+---
+
+## Vínculo da família (somente-convite-migration.sql)
+
+- A família é vinculada **só** por convite (`create_patient_invite` → link/QR →
+  `accept_patient_invite`) ou por pedido de cadastro aprovado pelo médico (`patient_requests`).
+- **Não existe mais vínculo automático por e-mail**: `patients_parent_select` é só
+  `parent_id = auth.uid()`; `patients_parent_link` e `get_user_id_by_email` foram removidos.
+  `patients.parent_email` fica apenas como anotação.
+- Uma conta de responsável pode ter vários filhos (irmãos): `AuthContext` expõe
+  `pacientes`, `paciente` (ativo) e `selecionarPaciente(id)`.
