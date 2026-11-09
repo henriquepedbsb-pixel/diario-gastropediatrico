@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, UtensilsCrossed, TrendingUp, FileText, Lightbulb, Droplets,
          Plus, Trash2, Loader2, X, Scale, Ruler, Brain,
          ClipboardList, Pencil, Check, Upload, Paperclip, ToggleLeft, ToggleRight,
-         Milestone, Syringe, Camera, FileDown, Sheet } from 'lucide-react'
+         Milestone, Syringe, Camera, FileDown, Sheet, QrCode, UserCheck } from 'lucide-react'
 import TabMarcos             from '../components/paciente/TabMarcos'
 import TabVacinas            from '../components/paciente/TabVacinas'
 import TabSintomas           from '../components/paciente/TabSintomas'
@@ -22,6 +22,7 @@ import TabChoro              from '../components/paciente/TabChoro'
 import TabTimeline           from '../components/paciente/TabTimeline'
 import TabDiarioFamilia      from '../components/paciente/TabDiarioFamilia'
 import TabExamesMedico       from '../components/paciente/TabExamesMedico'
+import ConviteFamiliaModal   from '../components/paciente/ConviteFamiliaModal'
 import { exportPatientPDF }  from '../lib/exportPDF'
 import { exportPatientExcel } from '../lib/exportExcel'
 import { useAuth } from '../contexts/AuthContext'
@@ -1753,6 +1754,7 @@ export default function PacienteDetailPage() {
   const setActiveTab = (tab) => setSearchParams({ tab }, { replace: true })
 
   const [confirmDel,     setConfirmDel]     = useState(false)
+  const [convite,        setConvite]        = useState(false)
   const [deletando,      setDeletando]      = useState(false)
 
   const handleDeletePaciente = async () => {
@@ -1910,6 +1912,17 @@ export default function PacienteDetailPage() {
                 {nomeMae && <span>👩 {nomeMae}</span>}
               </div>
             )}
+            {/* Convite da família (só enquanto não há responsável vinculado) */}
+            {!patient.parent_id ? (
+              <button onClick={() => setConvite(true)}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sol text-noite hover:brightness-95 active:scale-95">
+                <QrCode size={13} /> Convidar família
+              </button>
+            ) : (
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-green-700">
+                <UserCheck size={13} /> Família vinculada
+              </span>
+            )}
             {/* Observações clínicas */}
             {notasCli && (
               <p className="mt-1.5 text-xs text-slate-400 italic line-clamp-2">{notasCli}</p>
@@ -1950,6 +1963,8 @@ export default function PacienteDetailPage() {
           </div>
           </div>
         </div>
+
+      {convite && <ConviteFamiliaModal patient={patient} onClose={() => setConvite(false)} />}
 
       {/* Modal de confirmação de exclusão */}
       {confirmDel && (
