@@ -23,6 +23,8 @@ import TabTimeline           from '../components/paciente/TabTimeline'
 import TabDiarioFamilia      from '../components/paciente/TabDiarioFamilia'
 import TabExamesMedico       from '../components/paciente/TabExamesMedico'
 import ConviteFamiliaModal   from '../components/paciente/ConviteFamiliaModal'
+import CurvasCrescimento     from '../components/crescimento/CurvasCrescimento'
+import { formatarIG, ehPrematuro } from '../lib/crescimento'
 import { exportPatientPDF }  from '../lib/exportPDF'
 import { exportPatientExcel } from '../lib/exportExcel'
 import { useAuth } from '../contexts/AuthContext'
@@ -406,7 +408,70 @@ function TabelaMedidas({ medidas, onDelete }) {
   )
 }
 
-function TabGraficos({ patient }) {
+/* Idade gestacional ao nascer — define curva de prematuro e idade corrigida */
+function EditorIG({ patient, onUpdate }) {
+  const [editando, setEditando] = useState(false)
+  const [sem,      setSem]      = useState('')
+  const [dias,     setDias]     = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const [erro,     setErro]     = useState('')
+  const ig = formatarIG(patient)
+
+  const abrir = () => {
+    setSem(patient.gestational_age_weeks ?? ''); setDias(patient.gestational_age_days ?? '')
+    setErro(''); setEditando(true)
+  }
+  const salvar = async () => {
+    const s = sem === '' ? null : Number(sem)
+    const d = dias === '' ? 0 : Number(dias)
+    if (s !== null && (!Number.isInteger(s) || s < 22 || s > 44)) { setErro('Semanas entre 22 e 44.'); return }
+    if (!Number.isInteger(d) || d < 0 || d > 6) { setErro('Dias entre 0 e 6.'); return }
+    setSalvando(true); setErro('')
+    const { error } = await supabase.from('patients')
+      .update({ gestational_age_weeks: s, gestational_age_days: s === null ? null : d })
+      .eq('id', patient.id)
+    setSalvando(false)
+    if (error) { setErro(error.message); return }
+    setEditando(false); onUpdate?.()
+  }
+
+  if (!editando) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-slate-500">IG ao nascer:</span>
+        {ig ? (
+          <span className={`badge ${ehPrematuro(patient) ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>
+            {ig}{ehPrematuro(patient) ? ' · prematuro' : ''}
+          </span>
+        ) : <span className="text-slate-400 text-xs">não informada (curvas OMS pela idade cronológica)</span>}
+        <button onClick={abrir} className="text-xs font-semibold text-blue-600 hover:underline">
+          {ig ? 'Alterar' : 'Informar'}
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-wrap items-end gap-2">
+      <div>
+        <label className="text-xs font-semibold text-slate-500 block mb-1" htmlFor="ig-sem">Semanas</label>
+        <input id="ig-sem" type="number" min={22} max={44} className="input w-24" value={sem}
+          onChange={e => setSem(e.target.value)} placeholder="ex: 32" />
+      </div>
+      <div>
+        <label className="text-xs font-semibold text-slate-500 block mb-1" htmlFor="ig-dias">Dias</label>
+        <input id="ig-dias" type="number" min={0} max={6} className="input w-20" value={dias}
+          onChange={e => setDias(e.target.value)} placeholder="0–6" />
+      </div>
+      <button onClick={salvar} disabled={salvando} className="btn-primary">
+        {salvando ? <Loader2 size={14} className="animate-spin" /> : 'Salvar'}
+      </button>
+      <button onClick={() => setEditando(false)} className="btn-secondary">Cancelar</button>
+      {erro && <p className="w-full text-xs text-red-600">{erro}</p>}
+    </div>
+  )
+}
+
+function TabGraficos({ patient, onUpdate }) {
   const { session }    = useAuth()
   const [medidas,      setMedidas]    = useState([])
   const [loading,      setLoading]    = useState(true)   // só true no 1º carregamento
@@ -485,6 +550,10 @@ function TabGraficos({ patient }) {
 
   return (
     <div className="space-y-4">
+      <div className="card p-4">
+        <EditorIG patient={patient} onUpdate={onUpdate} />
+      </div>
+
       {/* Barra de ação */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -507,7 +576,7 @@ function TabGraficos({ patient }) {
         <div className="card p-12 text-center text-slate-400">
           <Scale size={36} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium">Nenhuma medição registrada</p>
-          <p className="text-xs mt-1">Cadastre a primeira medição para ver os gráficos de crescimento OMS</p>
+          <p className="text-xs mt-1">Cadastre a primeira medição para ver as curvas de crescimento</p>
         </div>
       ) : (
         /* Layout: gráficos (60%) + tabela (40%) em desktop; empilhado em mobile */
@@ -515,22 +584,28 @@ function TabGraficos({ patient }) {
 
           {/* Coluna dos gráficos */}
           <div className="space-y-4">
-            <GrowthChart
-              title={`Peso — ${isMenino ? 'Meninos' : 'Meninas'} (OMS até 10 anos)`} unit="kg"
-              whoData={isMenino ? WHO_PESO_MENINOS : WHO_PESO_MENINAS}
-              patientData={medidas} dataKey="weight_kg"
-            />
-            <GrowthChart
-              title={`Estatura — ${isMenino ? 'Meninos' : 'Meninas'} (OMS até 18 anos)`} unit="cm"
-              whoData={isMenino ? WHO_ALTURA_MENINOS : WHO_ALTURA_MENINAS}
-              patientData={medidas} dataKey="height_cm"
-            />
-            <GrowthChart
-              title={`Perímetro Cefálico — ${isMenino ? 'Meninos' : 'Meninas'} (OMS até 5 anos)`} unit="cm"
-              whoData={isMenino ? WHO_PC_MENINOS : WHO_PC_MENINAS}
-              patientData={medidas} dataKey="head_circumference_cm"
-              maxAge={60}
-            />
+            <CurvasCrescimento patient={patient} medidas={medidas} modo="medico" />
+
+            {/* Acima de 5 anos: gráficos da versão anterior (OMS 2007, P3/P50/P97) */}
+            {medidas.some(m => m.age_months > 60) && (
+              <details className="card p-4">
+                <summary className="text-sm font-semibold text-slate-600 cursor-pointer">
+                  Acima de 5 anos — referência OMS 2007 (P3, P50, P97)
+                </summary>
+                <div className="space-y-4 mt-4">
+                  <GrowthChart
+                    title={`Peso — ${isMenino ? 'Meninos' : 'Meninas'} (OMS 2007)`} unit="kg"
+                    whoData={isMenino ? WHO_PESO_MENINOS : WHO_PESO_MENINAS}
+                    patientData={medidas.filter(m => m.age_months > 60)} dataKey="weight_kg"
+                  />
+                  <GrowthChart
+                    title={`Estatura — ${isMenino ? 'Meninos' : 'Meninas'} (OMS 2007)`} unit="cm"
+                    whoData={isMenino ? WHO_ALTURA_MENINOS : WHO_ALTURA_MENINAS}
+                    patientData={medidas.filter(m => m.age_months > 60)} dataKey="height_cm"
+                  />
+                </div>
+              </details>
+            )}
           </div>
 
           {/* Coluna da tabela */}
@@ -1948,7 +2023,7 @@ export default function PacienteDetailPage() {
             {activeTab === 'cadastro'       && <TabCadastro      patient={patient} onUpdate={loadPatient} />}
             {activeTab === 'diario'         && <TabDiario        patient={patient} />}
             {activeTab === 'fezes'          && <TabIntestinal    patient={patient} />}
-            {activeTab === 'graficos'       && <TabGraficos      patient={patient} />}
+            {activeTab === 'graficos'       && <TabGraficos      patient={patient} onUpdate={loadPatient} />}
             {activeTab === 'receitas'       && <TabReceitas      patient={patient} />}
             {activeTab === 'dicas'          && <TabDicas         patient={patient} />}
             {activeTab === 'marcos'         && <TabMarcos        birthdate={patient.birthdate} />}

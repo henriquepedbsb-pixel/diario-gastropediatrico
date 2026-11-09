@@ -76,6 +76,7 @@ const PARENT_TABS = [
   { id: 'medicamentos',   label: 'Medicamentos',      icon: Pill            },
 
   H('Acompanhamento'),
+  { id: 'crescimento',    label: 'Crescimento',       icon: TrendingUp      },
   { id: 'vacinas',        label: 'Vacinas',           icon: Syringe         },
   { id: 'receitas',       label: 'Prescrições',       icon: FileText        },
   { id: 'alertas',        label: 'Alertas',           icon: Bell            },

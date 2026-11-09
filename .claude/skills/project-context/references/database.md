@@ -299,3 +299,17 @@ Exibe notificação do browser se `Notification.permission === 'granted'`.
   `patients.parent_email` fica apenas como anotação.
 - Uma conta de responsável pode ter vários filhos (irmãos): `AuthContext` expõe
   `pacientes`, `paciente` (ativo) e `selecionarPaciente(id)`.
+
+
+---
+
+## Curvas de crescimento (curvas-migration.sql)
+
+- `patients.gestational_age_weeks` (22–44) e `gestational_age_days` (0–6): só o médico altera
+  (trigger `trg_patients_guard_ga`). Define prematuro (< 37 sem) e idade corrigida.
+- Referências em `src/lib/curvasReferencia.js` (GERADO por `scripts/gerar-curvas-referencia.py`):
+  OMS 2006 LMS mensal 0–60 m · INTERGROWTH-21st pós-natal prematuros 27–64 sem IPM.
+- Regras em `src/lib/crescimento.js`: prematuro → INTERGROWTH até 64 sem IPM; depois OMS pela
+  idade corrigida até 24 meses corrigidos; termo/IG ausente → OMS cronológica.
+- Tela: `components/crescimento/CurvasCrescimento.jsx` (modo `medico` com z/P; modo `familia` sem
+  interpretação). Família: aba `crescimento` (`TabCrescimentoFamilia`).
