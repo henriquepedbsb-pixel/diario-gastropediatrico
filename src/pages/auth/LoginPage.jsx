@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import BrandMark from '../../components/layout/BrandMark'
+import VideoAbertura from '../../components/layout/VideoAbertura'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function LoginPage() {
@@ -34,27 +35,25 @@ export default function LoginPage() {
     <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[1.1fr_1fr]">
 
       {/* Lado da marca — tela cheia no computador */}
-      <aside className="hero-band relative hidden lg:flex flex-col justify-between p-12 overflow-hidden">
-        <BrandMark />
-        <div className="max-w-lg">
-          <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight">
+      <aside className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden bg-noite text-white">
+        {/* Vídeo de fundo + filtro azul (texto legível por cima) */}
+        <div className="absolute inset-0" aria-hidden="true">
+          <VideoAbertura posicao="object-[42%_center]" />
+          <div className="absolute inset-0 bg-marinho/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-noite/95 via-noite/35 to-noite/10" />
+        </div>
+        <div className="relative"><BrandMark /></div>
+        <div className="relative max-w-lg">
+          <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight drop-shadow-lg">
             A rotina do seu filho,{' '}
             <span className="bg-[linear-gradient(transparent_62%,rgba(255,230,0,.85)_62%)] px-1">num só lugar</span>.
           </h1>
-          <p className="mt-6 text-lg text-suave max-w-md">
+          <p className="mt-5 text-lg text-white/85 max-w-md drop-shadow">
             Registre alimentação, sono, intestino e sintomas entre as consultas. O Dr. Henrique acompanha tudo e chega à consulta já sabendo o que aconteceu.
           </p>
-          <ul className="mt-8 space-y-3 text-[15px] font-semibold">
-            {['Diário de sintomas, sono e amamentação', 'Prescrições, exames e documentos', 'Orientações do médico para a sua família'].map(t => (
-              <li key={t} className="flex items-center gap-3"><span className="w-2 h-2 rounded-full bg-sol shrink-0" />{t}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="flex items-end gap-4">
-          <img src="/medico.jpg" alt="Dr. Henrique Gomes" className="w-20 h-20 rounded-2xl object-cover object-top border border-white/15" />
-          <div className="text-sm">
+          <div className="mt-6 text-sm">
             <p className="font-bold text-white">Dr. Henrique Gomes</p>
-            <p className="text-suave">Pediatra e Gastropediatra · CRM-DF 14.611</p>
+            <p className="text-white/70">Pediatra e Gastropediatra · CRM-DF 14.611</p>
           </div>
         </div>
       </aside>
@@ -66,12 +65,8 @@ export default function LoginPage() {
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden">
 
           {/* Topo com foto — só no celular */}
-          <div className="relative overflow-hidden lg:hidden">
-            <img
-              src="/medico.jpg"
-              alt="Dr. Henrique Gomes"
-              className="w-full block"
-            />
+          <div className="relative overflow-hidden lg:hidden aspect-video bg-noite">
+            <VideoAbertura />
             <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-noite/90 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 px-8 py-5 text-white text-center">
               <h1 className="text-xl font-extrabold tracking-tight drop-shadow">Ped<span className="text-sol">Diário</span></h1>
