@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useConvite } from '../hooks/useConvite'
 import { isDoctor } from '../lib/utils'
 import { supabase } from '../lib/supabase'
+import VideoAbertura from '../components/layout/VideoAbertura'
 
 /* ─────────────────────────────────────────────────────────────
    /convite/:token — página pública do convite da família.
@@ -23,7 +24,13 @@ function Casca({ children }) {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4">
         <p className="text-center text-xl font-extrabold text-noite">Ped<span className="bg-sol px-1 rounded">Diário</span></p>
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 sm:p-8">{children}</div>
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden">
+          <div className="relative aspect-video bg-noite">
+            <VideoAbertura />
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-noite/70 to-transparent" />
+          </div>
+          <div className="p-6 sm:p-8">{children}</div>
+        </div>
       </div>
     </div>
   )
