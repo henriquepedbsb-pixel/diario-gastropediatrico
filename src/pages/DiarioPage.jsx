@@ -31,6 +31,9 @@ import TabMeuDiario          from '../components/paciente/TabMeuDiario'
 import TabTimeline           from '../components/paciente/TabTimeline'
 import { hojeLocal }         from '../hooks/useDiarioFamilia'
 import lazyComRecarga       from '../lib/lazyComRecarga'
+import InstalarApp          from '../components/familia/InstalarApp'
+import SemanaResumo         from '../components/familia/SemanaResumo'
+import BoasVindas           from '../components/familia/BoasVindas'
 
 /* Abas com gráficos (biblioteca pesada) só baixam quando abertas */
 const TabGraficoFezes       = lazyComRecarga(() => import('../components/paciente/TabGraficoFezes'))
@@ -1767,6 +1770,10 @@ function TabResumo({ patient, onNavigate }) {
         <div aria-hidden className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-sol/10 blur-2xl" />
       </div>
 
+      <InstalarApp />
+
+      <SemanaResumo patient={patient} />
+
       {/* Lembretes do diário */}
       {data.diarioLembretes.length > 0 && (
         <button onClick={() => onNavigate('meudiario')}
@@ -1848,7 +1855,7 @@ const TABS = [
 ]
 
 export default function DiarioPage() {
-  const { paciente, pacientes, selecionarPaciente, profile, refreshPaciente } = useAuth()
+  const { paciente, pacientes, selecionarPaciente, profile, refreshPaciente, session } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab    = searchParams.get('tab') || 'resumo'
   const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
@@ -1871,6 +1878,13 @@ export default function DiarioPage() {
 
   return (
     <div className="flex flex-col h-full">
+
+      <BoasVindas
+        userId={session?.user?.id}
+        nomeCrianca={paciente.name?.split(' ')[0]}
+        artigo={paciente.gender === 'F' ? 'da' : paciente.gender === 'M' ? 'do' : 'de'}
+        onRegistrar={() => setTab('meudiario')}
+      />
 
       {/* Cabeçalho do paciente */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-4 shrink-0">
