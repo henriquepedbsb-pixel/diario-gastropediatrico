@@ -79,8 +79,11 @@
   /* Faixa no padrão do site: degradê noite → marinho */
   .hero-band { background: linear-gradient(135deg, var(--color-noite) 0%, var(--color-marinho) 100%); color: #fff; }
 
-  /* Entrada suave do conteúdo ao trocar de aba */
-  .tab-enter { animation: tab-enter .22s ease-out both; }
+  /* Entrada suave do conteúdo ao trocar de aba.
+     "backwards" (e não "both"): ao terminar, a animação não pode deixar um transform
+     aplicado, senão os modais (position: fixed) dentro da aba passam a se posicionar
+     pela aba inteira em vez da tela. */
+  .tab-enter { animation: tab-enter .22s ease-out backwards; }
 }
 
 @keyframes tab-enter {
